@@ -1,0 +1,22 @@
+# Maven
+target/
+
+# NetBeans
+nbproject/private/
+
+# Logs
+*.log
+
+# Compilados
+*.class
+
+# IDE
+.idea/
+.vscode/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Configuración sensible
+*.env
