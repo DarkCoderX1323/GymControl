@@ -13,6 +13,7 @@ public class Pago {
     private String metodoPago;
     private LocalDateTime fechaPago;
     private String descripcion;
+    private int membresiaId;
 
     public Pago() {
     }
@@ -83,4 +84,11 @@ public class Pago {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
+    public int getMembresiaId() {
+    return membresiaId;
+}
+
+public void setMembresiaId(int membresiaId) {
+    this.membresiaId = membresiaId;
+}
 }

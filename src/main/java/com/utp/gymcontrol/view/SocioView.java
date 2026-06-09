@@ -3,11 +3,10 @@ package com.utp.gymcontrol.view;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-
 import com.utp.gymcontrol.dao.SocioDAO;
 import com.utp.gymcontrol.model.Socio;
-
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 public class SocioView extends JFrame {
 
@@ -402,17 +401,17 @@ public class SocioView extends JFrame {
         String telefono = txtTelefono.getText().trim();
         String email = txtEmail.getText().trim();
 
-        if (nombre.isEmpty() ||
-                dni.isEmpty() ||
-                telefono.isEmpty()) {
+        if (StringUtils.isBlank(nombre) ||
+        StringUtils.isBlank(dni) ||
+        StringUtils.isBlank(telefono)) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Complete todos los campos obligatorios."
-            );
+    JOptionPane.showMessageDialog(
+            this,
+            "Complete todos los campos obligatorios."
+    );
 
-            return;
-        }
+    return;
+}
 
         if (!validarCampos(nombre, dni, telefono)) {
             return;
@@ -468,6 +467,18 @@ public class SocioView extends JFrame {
         String dni = txtDni.getText().trim();
         String telefono = txtTelefono.getText().trim();
         String email = txtEmail.getText().trim();
+        
+        if (StringUtils.isBlank(nombre) ||
+        StringUtils.isBlank(dni) ||
+        StringUtils.isBlank(telefono)) {
+
+    JOptionPane.showMessageDialog(
+            this,
+            "Complete todos los campos obligatorios."
+    );
+
+    return;
+}
 
         if (!validarCampos(nombre, dni, telefono)) {
             return;
@@ -572,46 +583,55 @@ public class SocioView extends JFrame {
     }
 
     private boolean validarCampos(
-            String nombre,
-            String dni,
-            String telefono
-    ) {
+        String nombre,
+        String dni,
+        String telefono
+) {
 
-        // Validar nombre
-        if (!nombre.matches(
-                "[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
-        )) {
+    if (StringUtils.isBlank(nombre) ||
+            StringUtils.isBlank(dni) ||
+            StringUtils.isBlank(telefono)) {
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "El nombre solo debe contener letras."
-            );
+        JOptionPane.showMessageDialog(
+                this,
+                "Existen campos vacíos."
+        );
 
-            return false;
-        }
-
-        // Validar DNI
-        if (!dni.matches("\\d{8}")) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "El DNI debe contener exactamente 8 números."
-            );
-
-            return false;
-        }
-
-        // Validar teléfono
-        if (!telefono.matches("\\d{9}")) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "El teléfono debe contener exactamente 9 números."
-            );
-
-            return false;
-        }
-
-        return true;
+        return false;
     }
+
+    if (!nombre.matches(
+            "[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+    )) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "El nombre solo debe contener letras."
+        );
+
+        return false;
+    }
+
+    if (!dni.matches("\\d{8}")) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "El DNI debe contener exactamente 8 números."
+        );
+
+        return false;
+    }
+
+    if (!telefono.matches("\\d{9}")) {
+
+        JOptionPane.showMessageDialog(
+                this,
+                "El teléfono debe contener exactamente 9 números."
+        );
+
+        return false;
+    }
+
+    return true;
+}
 }

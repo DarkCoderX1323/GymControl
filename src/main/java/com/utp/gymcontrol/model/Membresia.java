@@ -13,6 +13,7 @@ public class Membresia {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private String estado;
+    private int tipoMembresiaId;
 
     public Membresia() {
     }
@@ -82,5 +83,13 @@ public class Membresia {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+    
+    public int getTipoMembresiaId() {
+    return tipoMembresiaId;
+}
+
+    public void setTipoMembresiaId(int tipoMembresiaId) {
+    this.tipoMembresiaId = tipoMembresiaId;
     }
 }

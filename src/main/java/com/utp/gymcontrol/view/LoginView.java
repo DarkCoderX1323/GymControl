@@ -154,7 +154,7 @@ public class LoginView extends JFrame {
                     "Bienvenido " + usuario.getUsername()
             );
 
-            new SocioView();
+            new DashboardView();
 
             dispose();
 

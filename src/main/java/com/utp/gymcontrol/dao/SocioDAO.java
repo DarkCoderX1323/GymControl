@@ -1,4 +1,4 @@
-package com.utp.gymcontrol.dao;
+ package com.utp.gymcontrol.dao;
 
 import com.utp.gymcontrol.database.ConexionDB;
 import com.utp.gymcontrol.model.Socio;
