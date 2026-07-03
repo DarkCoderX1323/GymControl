@@ -23,6 +23,7 @@ public class SocioView extends JFrame {
     private JButton btnActualizar;
     private JButton btnEliminar;
     private JButton btnLimpiar;
+    private JButton btnVolver;
 
     // Tabla
     private JTable tablaSocios;
@@ -167,7 +168,12 @@ public class SocioView extends JFrame {
         btnLimpiar = crearBoton(
                 "Limpiar",
                 new Color(100,100,100)
-        );
+         );
+        
+        btnVolver = crearBoton(
+        "Volver",
+        new Color(255,140,0)
+);
 
         // =========================
         // EVENTOS
@@ -188,6 +194,14 @@ public class SocioView extends JFrame {
         btnLimpiar.addActionListener(
                 e -> limpiarCampos()
         );
+        
+        btnVolver.addActionListener(e -> {
+
+    new DashboardView();
+
+    dispose();
+
+});
 
         // =========================
         // AGREGAR BOTONES
@@ -212,6 +226,12 @@ public class SocioView extends JFrame {
         );
 
         panelFormulario.add(btnLimpiar);
+        
+        panelFormulario.add(
+        Box.createVerticalStrut(10)
+);
+
+panelFormulario.add(btnVolver);
 
         // =========================
         // TABLA

@@ -22,6 +22,7 @@ public class MembresiaView extends JFrame {
     private JTextField txtFin;
 
     private JButton btnRegistrar;
+    private JButton btnVolver;
 
     private JTable tabla;
     private DefaultTableModel modelo;
@@ -70,6 +71,12 @@ public class MembresiaView extends JFrame {
 
         btnRegistrar =
                 new JButton("Registrar Membresía");
+        
+        btnVolver.setBackground(
+        new Color(255,140,0)
+);
+
+btnVolver.setForeground(Color.WHITE);
 
         formulario.add(new JLabel("Socio"));
         formulario.add(cbSocios);
@@ -85,6 +92,9 @@ public class MembresiaView extends JFrame {
 
         formulario.add(new JLabel(""));
         formulario.add(btnRegistrar);
+        formulario.add(new JLabel());
+
+formulario.add(btnVolver);
 
         modelo = new DefaultTableModel();
 
@@ -123,6 +133,13 @@ public class MembresiaView extends JFrame {
         btnRegistrar.addActionListener(
                 e -> registrarMembresia()
         );
+        btnVolver.addActionListener(e -> {
+
+    new DashboardView();
+
+    dispose();
+
+});
     }
 
     private void cargarSocios() {
