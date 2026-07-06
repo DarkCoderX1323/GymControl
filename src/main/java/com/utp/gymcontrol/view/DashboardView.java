@@ -4,6 +4,7 @@ import com.utp.gymcontrol.dao.DashboardDAO;
 
 import javax.swing.*;
 import java.awt.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.utp.gymcontrol.utils.ExcelReportGenerator;
@@ -14,10 +15,9 @@ public class DashboardView extends JFrame {
     private static final Logger logger =
             LoggerFactory.getLogger(
                     DashboardView.class
-                    
+
             );
-    
-    
+
 
     private DashboardDAO dashboardDAO;
 
@@ -31,13 +31,13 @@ public class DashboardView extends JFrame {
 
         dashboardDAO = new DashboardDAO();
         logger.info(
-        "Dashboard iniciado - GymControl v0.3"
-                
-);
+                "Dashboard iniciado - GymControl v0.3"
+
+        );
         logger.info(
-            "Modulos cargados: "
-            + DashboardUtils.obtenerModulos()
-    );
+                "Modulos cargados: "
+                        + DashboardUtils.obtenerModulos()
+        );
 
         iniciarComponentes();
 
@@ -51,7 +51,7 @@ public class DashboardView extends JFrame {
 
         setVisible(true);
     }
-       
+
 
     private void iniciarComponentes() {
 
@@ -76,7 +76,7 @@ public class DashboardView extends JFrame {
                 new JPanel(new BorderLayout());
 
         panelPrincipal.setBackground(
-                new Color(30,30,30)
+                new Color(30, 30, 30)
         );
 
         // =========================
@@ -86,15 +86,15 @@ public class DashboardView extends JFrame {
         JPanel panelMenu = new JPanel();
 
         panelMenu.setBackground(
-                new Color(25,25,25)
+                new Color(25, 25, 25)
         );
 
         panelMenu.setPreferredSize(
-                new Dimension(250,700)
+                new Dimension(250, 700)
         );
 
         panelMenu.setLayout(
-                new GridLayout(7,1,10,10)
+                new GridLayout(7, 1, 10, 10)
         );
 
         JLabel lblTitulo =
@@ -131,51 +131,51 @@ public class DashboardView extends JFrame {
 
         btnSocios.addActionListener(e -> {
 
-    logger.info(
-            "Acceso al modulo Gestion de Socios"
-    );
+            logger.info(
+                    "Acceso al modulo Gestion de Socios"
+            );
 
-    new SocioView();
+            new SocioView();
 
-});
+        });
         btnMembresias.addActionListener(e -> {
 
-    logger.info(
-            "Acceso al modulo Membresias"
-    );
+            logger.info(
+                    "Acceso al modulo Membresias"
+            );
 
-    new MembresiaView();
+            new MembresiaView();
 
-});
-    btnPagos.addActionListener(e -> {
+        });
+        btnPagos.addActionListener(e -> {
 
-    logger.info(
-            "Acceso al modulo Pagos"
-    );
+            logger.info(
+                    "Acceso al modulo Pagos"
+            );
 
-    new PagoView();
+            new PagoView();
 
-});
-    btnReportes.addActionListener(e -> {
+        });
+        btnReportes.addActionListener(e -> {
 
-    logger.info(
-            "Acceso al modulo Reportes"
-    );
+            logger.info(
+                    "Acceso al modulo Reportes"
+            );
 
-    new ReporteView();
+            new ReporteView();
 
-});
-    btnCerrarSesion.addActionListener(e -> {
+        });
+        btnCerrarSesion.addActionListener(e -> {
 
-    logger.info(
-            "Cierre de sesion realizado"
-    );
+            logger.info(
+                    "Cierre de sesion realizado"
+            );
 
-    dispose();
+            dispose();
 
-    new LoginView();
+            new LoginView();
 
-});
+        });
 
         panelMenu.add(lblTitulo);
         panelMenu.add(btnSocios);
@@ -193,12 +193,12 @@ public class DashboardView extends JFrame {
                 new JPanel(new BorderLayout());
 
         panelCentro.setBackground(
-                new Color(40,40,40)
+                new Color(40, 40, 40)
         );
 
         panelCentro.setBorder(
                 BorderFactory.createEmptyBorder(
-                        20,20,20,20
+                        20, 20, 20, 20
                 )
         );
 
@@ -232,14 +232,14 @@ public class DashboardView extends JFrame {
                 );
 
         panelCards.setBackground(
-                new Color(40,40,40)
+                new Color(40, 40, 40)
         );
 
         panelCards.add(
                 crearTarjeta(
                         "Socios Activos",
                         String.valueOf(socios),
-                        new Color(0,120,215)
+                        new Color(0, 120, 215)
                 )
         );
 
@@ -247,7 +247,7 @@ public class DashboardView extends JFrame {
                 crearTarjeta(
                         "Membresías Activas",
                         String.valueOf(membresias),
-                        new Color(0,153,51)
+                        new Color(0, 153, 51)
                 )
         );
 
@@ -255,7 +255,7 @@ public class DashboardView extends JFrame {
                 crearTarjeta(
                         "Ingresos del Mes",
                         "S/ " + ingresos,
-                        new Color(255,140,0)
+                        new Color(255, 140, 0)
                 )
         );
 
@@ -274,7 +274,7 @@ public class DashboardView extends JFrame {
                 );
 
         panelAcciones.setBackground(
-                new Color(40,40,40)
+                new Color(40, 40, 40)
         );
 
         panelAcciones.setBorder(
@@ -286,52 +286,85 @@ public class DashboardView extends JFrame {
                 )
         );
 
-        panelAcciones.add(
-                new JButton("Nuevo Socio")
-        );
 
-        panelAcciones.add(
-                new JButton("Nueva Membresía")
-        );
+        JButton btnNuevoSocio =
+                new JButton("Nuevo Socio");
 
-        panelAcciones.add(
-                new JButton("Registrar Pago")
-        );
+        btnNuevoSocio.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso rapido: Nuevo Socio"
+            );
+
+            new SocioView();
+
+        });
+
+        JButton btnNuevaMembresia =
+                new JButton("Nueva Membresía");
+
+        btnNuevaMembresia.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso rapido: Nueva Membresia"
+            );
+
+            new MembresiaView();
+
+        });
+
+        JButton btnRegistrarPago =
+                new JButton("Registrar Pago");
+
+        btnRegistrarPago.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso rapido: Registrar Pago"
+            );
+
+            new PagoView();
+
+        });
+
+        panelAcciones.add(btnNuevoSocio);
+        panelAcciones.add(btnNuevaMembresia);
+        panelAcciones.add(btnRegistrarPago);
 
         JButton btnGenerarReporte =
-        new JButton("Generar Reporte");
+            new JButton("Generar Reporte Socios");
 
-btnGenerarReporte.addActionListener(e -> {
 
-    boolean generado =
-            ExcelReportGenerator
-                    .generarReporteSocios();
+        btnGenerarReporte.addActionListener(e -> {
 
-    if (generado) {
+            boolean generado =
+                    ExcelReportGenerator
+                            .generarReporteSocios();
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Reporte generado correctamente."
+            if (generado) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Reporte generado correctamente."
+                );
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Error al generar reporte."
+                );
+            }
+        });
+
+        panelAcciones.add(
+                btnGenerarReporte
         );
-
-    } else {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Error al generar reporte."
-        );
-    }
-});
-
-panelAcciones.add(
-        btnGenerarReporte
-);
 
         JPanel contenido =
                 new JPanel(new BorderLayout());
 
         contenido.setBackground(
-                new Color(40,40,40)
+                new Color(40, 40, 40)
         );
 
         contenido.add(
@@ -387,7 +420,7 @@ panelAcciones.add(
 
         card.setBorder(
                 BorderFactory.createEmptyBorder(
-                        15,15,15,15
+                        15, 15, 15, 15
                 )
         );
 
