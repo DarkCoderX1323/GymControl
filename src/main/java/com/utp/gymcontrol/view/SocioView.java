@@ -41,7 +41,8 @@ public class SocioView extends JFrame {
 
         setLocationRelativeTo(null);
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         setResizable(false);
 
