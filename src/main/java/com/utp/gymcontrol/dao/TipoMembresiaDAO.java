@@ -72,32 +72,33 @@ public class TipoMembresiaDAO {
 
             stmt.setInt(1, id);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
+                if (rs.next()) {
 
-                TipoMembresia tipo =
-                        new TipoMembresia();
+                    TipoMembresia tipo =
+                            new TipoMembresia();
 
-                tipo.setId(rs.getInt("id"));
+                    tipo.setId(rs.getInt("id"));
 
-                tipo.setNombre(
-                        rs.getString("nombre")
-                );
+                    tipo.setNombre(
+                            rs.getString("nombre")
+                    );
 
-                tipo.setDuracionDias(
-                        rs.getInt("duracion_dias")
-                );
+                    tipo.setDuracionDias(
+                            rs.getInt("duracion_dias")
+                    );
 
-                tipo.setPrecio(
-                        rs.getDouble("precio")
-                );
+                    tipo.setPrecio(
+                            rs.getDouble("precio")
+                    );
 
-                tipo.setEstado(
-                        rs.getString("estado")
-                );
+                    tipo.setEstado(
+                            rs.getString("estado")
+                    );
 
-                return tipo;
+                    return tipo;
+                }
             }
 
         } catch (SQLException e) {
