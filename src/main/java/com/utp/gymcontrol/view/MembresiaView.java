@@ -73,12 +73,12 @@ public class MembresiaView extends JFrame {
                 new JButton("Registrar Membresía");
 
         btnVolver = new JButton("Volver");
-        
-        btnVolver.setBackground(
-        new Color(255,140,0)
-);
 
-btnVolver.setForeground(Color.WHITE);
+        btnVolver.setBackground(
+                new Color(255,140,0)
+        );
+
+        btnVolver.setForeground(Color.WHITE);
 
         formulario.add(new JLabel("Socio"));
         formulario.add(cbSocios);
@@ -96,7 +96,7 @@ btnVolver.setForeground(Color.WHITE);
         formulario.add(btnRegistrar);
         formulario.add(new JLabel());
 
-formulario.add(btnVolver);
+        formulario.add(btnVolver);
 
         modelo = new DefaultTableModel();
 
@@ -137,11 +137,9 @@ formulario.add(btnVolver);
         );
         btnVolver.addActionListener(e -> {
 
-    new DashboardView();
+            dispose();
 
-    dispose();
-
-});
+        });
     }
 
     private void cargarSocios() {
@@ -194,120 +192,120 @@ formulario.add(btnVolver);
 
     private void calcularFechaFin() {
 
-    try {
+        try {
 
-        TipoMembresia tipo =
-                (TipoMembresia)
-                        cbTipos.getSelectedItem();
+            TipoMembresia tipo =
+                    (TipoMembresia)
+                            cbTipos.getSelectedItem();
 
-        if (tipo == null) {
-            return;
+            if (tipo == null) {
+                return;
+            }
+
+            LocalDate inicio =
+                    LocalDate.now();
+
+            LocalDate fin =
+                    inicio.plusDays(
+                            tipo.getDuracionDias()
+                    );
+
+            txtFin.setText(
+                    fin.toString()
+            );
+
+        } catch (Exception e) {
+
+            txtFin.setText("");
         }
-
-        LocalDate inicio =
-                LocalDate.now();
-
-        LocalDate fin =
-                inicio.plusDays(
-                        tipo.getDuracionDias()
-                );
-
-        txtFin.setText(
-                fin.toString()
-        );
-
-    } catch (Exception e) {
-
-        txtFin.setText("");
     }
-}
 
     private void registrarMembresia() {
 
-    try {
+        try {
 
-        Socio socio =
-                (Socio)
-                        cbSocios.getSelectedItem();
+            Socio socio =
+                    (Socio)
+                            cbSocios.getSelectedItem();
 
-        TipoMembresia tipo =
-                (TipoMembresia)
-                        cbTipos.getSelectedItem();
+            TipoMembresia tipo =
+                    (TipoMembresia)
+                            cbTipos.getSelectedItem();
 
-        if (socio == null || tipo == null) {
+            if (socio == null || tipo == null) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Seleccione un socio y un tipo."
+                );
+
+                return;
+            }
+
+            Membresia membresia =
+                    new Membresia();
+
+            membresia.setSocioId(
+                    socio.getId()
+            );
+
+            membresia.setTipo(
+                    tipo.getNombre()
+            );
+
+            membresia.setTipoMembresiaId(
+                    tipo.getId()
+            );
+
+            membresia.setFechaInicio(
+                    LocalDate.parse(
+                            txtInicio.getText()
+                    )
+            );
+
+            membresia.setFechaFin(
+                    LocalDate.parse(
+                            txtFin.getText()
+                    )
+            );
+
+            membresia.setEstado(
+                    "activa"
+            );
+
+            boolean registrado =
+                    membresiaDAO
+                            .registrarMembresia(
+                                    membresia
+                            );
+
+            if (registrado) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Membresía registrada correctamente."
+                );
+
+                cargarMembresias();
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No se pudo registrar."
+                );
+            }
+
+        } catch (Exception e) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Seleccione un socio y un tipo."
+                    "Error: " + e.getMessage()
             );
 
-            return;
+            e.printStackTrace();
         }
-
-        Membresia membresia =
-                new Membresia();
-
-        membresia.setSocioId(
-                socio.getId()
-        );
-
-        membresia.setTipo(
-                tipo.getNombre()
-        );
-
-        membresia.setTipoMembresiaId(
-                tipo.getId()
-        );
-
-        membresia.setFechaInicio(
-                LocalDate.parse(
-                        txtInicio.getText()
-                )
-        );
-
-        membresia.setFechaFin(
-                LocalDate.parse(
-                        txtFin.getText()
-                )
-        );
-
-        membresia.setEstado(
-                "activa"
-        );
-
-        boolean registrado =
-                membresiaDAO
-                        .registrarMembresia(
-                                membresia
-                        );
-
-        if (registrado) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Membresía registrada correctamente."
-            );
-
-            cargarMembresias();
-
-        } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "No se pudo registrar."
-            );
-        }
-
-    } catch (Exception e) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "Error: " + e.getMessage()
-        );
-
-        e.printStackTrace();
     }
-}
 
     private void cargarMembresias() {
 
