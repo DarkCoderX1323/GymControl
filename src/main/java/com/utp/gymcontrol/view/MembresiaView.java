@@ -71,6 +71,8 @@ public class MembresiaView extends JFrame {
 
         btnRegistrar =
                 new JButton("Registrar Membresía");
+
+        btnVolver = new JButton("Volver");
         
         btnVolver.setBackground(
         new Color(255,140,0)
