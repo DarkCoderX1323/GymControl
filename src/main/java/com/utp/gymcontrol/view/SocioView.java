@@ -168,12 +168,12 @@ public class SocioView extends JFrame {
         btnLimpiar = crearBoton(
                 "Limpiar",
                 new Color(100,100,100)
-         );
-        
+        );
+
         btnVolver = crearBoton(
-        "Volver",
-        new Color(255,140,0)
-);
+                "Volver",
+                new Color(255,140,0)
+        );
 
         // =========================
         // EVENTOS
@@ -194,14 +194,12 @@ public class SocioView extends JFrame {
         btnLimpiar.addActionListener(
                 e -> limpiarCampos()
         );
-        
+
         btnVolver.addActionListener(e -> {
 
-    new DashboardView();
+            dispose();
 
-    dispose();
-
-});
+        });
 
         // =========================
         // AGREGAR BOTONES
@@ -226,12 +224,12 @@ public class SocioView extends JFrame {
         );
 
         panelFormulario.add(btnLimpiar);
-        
-        panelFormulario.add(
-        Box.createVerticalStrut(10)
-);
 
-panelFormulario.add(btnVolver);
+        panelFormulario.add(
+                Box.createVerticalStrut(10)
+        );
+
+        panelFormulario.add(btnVolver);
 
         // =========================
         // TABLA
@@ -261,11 +259,11 @@ panelFormulario.add(btnVolver);
         tablaSocios.getSelectionModel()
                 .addListSelectionListener(e -> {
 
-            if (!e.getValueIsAdjusting()) {
+                    if (!e.getValueIsAdjusting()) {
 
-                seleccionarSocio();
-            }
-        });
+                        seleccionarSocio();
+                    }
+                });
 
         JScrollPane scrollPane =
                 new JScrollPane(tablaSocios);
@@ -422,16 +420,16 @@ panelFormulario.add(btnVolver);
         String email = txtEmail.getText().trim();
 
         if (StringUtils.isBlank(nombre) ||
-        StringUtils.isBlank(dni) ||
-        StringUtils.isBlank(telefono)) {
+                StringUtils.isBlank(dni) ||
+                StringUtils.isBlank(telefono)) {
 
-    JOptionPane.showMessageDialog(
-            this,
-            "Complete todos los campos obligatorios."
-    );
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Complete todos los campos obligatorios."
+            );
 
-    return;
-}
+            return;
+        }
 
         if (!validarCampos(nombre, dni, telefono)) {
             return;
@@ -487,18 +485,18 @@ panelFormulario.add(btnVolver);
         String dni = txtDni.getText().trim();
         String telefono = txtTelefono.getText().trim();
         String email = txtEmail.getText().trim();
-        
+
         if (StringUtils.isBlank(nombre) ||
-        StringUtils.isBlank(dni) ||
-        StringUtils.isBlank(telefono)) {
+                StringUtils.isBlank(dni) ||
+                StringUtils.isBlank(telefono)) {
 
-    JOptionPane.showMessageDialog(
-            this,
-            "Complete todos los campos obligatorios."
-    );
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Complete todos los campos obligatorios."
+            );
 
-    return;
-}
+            return;
+        }
 
         if (!validarCampos(nombre, dni, telefono)) {
             return;
@@ -603,55 +601,55 @@ panelFormulario.add(btnVolver);
     }
 
     private boolean validarCampos(
-        String nombre,
-        String dni,
-        String telefono
-) {
+            String nombre,
+            String dni,
+            String telefono
+    ) {
 
-    if (StringUtils.isBlank(nombre) ||
-            StringUtils.isBlank(dni) ||
-            StringUtils.isBlank(telefono)) {
+        if (StringUtils.isBlank(nombre) ||
+                StringUtils.isBlank(dni) ||
+                StringUtils.isBlank(telefono)) {
 
-        JOptionPane.showMessageDialog(
-                this,
-                "Existen campos vacíos."
-        );
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Existen campos vacíos."
+            );
 
-        return false;
+            return false;
+        }
+
+        if (!nombre.matches(
+                "[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
+        )) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El nombre solo debe contener letras."
+            );
+
+            return false;
+        }
+
+        if (!dni.matches("\\d{8}")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El DNI debe contener exactamente 8 números."
+            );
+
+            return false;
+        }
+
+        if (!telefono.matches("\\d{9}")) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El teléfono debe contener exactamente 9 números."
+            );
+
+            return false;
+        }
+
+        return true;
     }
-
-    if (!nombre.matches(
-            "[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+"
-    )) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "El nombre solo debe contener letras."
-        );
-
-        return false;
-    }
-
-    if (!dni.matches("\\d{8}")) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "El DNI debe contener exactamente 8 números."
-        );
-
-        return false;
-    }
-
-    if (!telefono.matches("\\d{9}")) {
-
-        JOptionPane.showMessageDialog(
-                this,
-                "El teléfono debe contener exactamente 9 números."
-        );
-
-        return false;
-    }
-
-    return true;
-}
 }

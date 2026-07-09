@@ -243,11 +243,11 @@ public class PagoView extends JFrame {
                                 100
                         )
                 );
-        
+
         btnVolver = crearBoton(
-        "Volver",
-        new Color(255,140,0)
-);
+                "Volver",
+                new Color(255,140,0)
+        );
 
         // =========================
         // EVENTOS
@@ -268,14 +268,12 @@ public class PagoView extends JFrame {
         btnLimpiar.addActionListener(
                 e -> limpiarCampos()
         );
-        
+
         btnVolver.addActionListener(e -> {
 
-    new DashboardView();
+            dispose();
 
-    dispose();
-
-});
+        });
 
         panelFormulario.add(btnRegistrar);
 
@@ -302,12 +300,12 @@ public class PagoView extends JFrame {
         );
 
         panelFormulario.add(btnLimpiar);
-        
-        panelFormulario.add(
-        Box.createVerticalStrut(10)
-);
 
-panelFormulario.add(btnVolver);
+        panelFormulario.add(
+                Box.createVerticalStrut(10)
+        );
+
+        panelFormulario.add(btnVolver);
 
         // =========================
         // TABLA
@@ -472,7 +470,7 @@ panelFormulario.add(btnVolver);
         return boton;
 
     }
-        // =========================
+    // =========================
     // CARGAR PAGOS
     // =========================
 
@@ -794,17 +792,17 @@ panelFormulario.add(btnVolver);
                         txtSocioId.getText()
                 ) ||
 
-                StringUtils.isBlank(
-                        txtMonto.getText()
-                ) ||
+                        StringUtils.isBlank(
+                                txtMonto.getText()
+                        ) ||
 
-                StringUtils.isBlank(
-                        txtMetodoPago.getText()
-                ) ||
+                        StringUtils.isBlank(
+                                txtMetodoPago.getText()
+                        ) ||
 
-                StringUtils.isBlank(
-                        txtMembresiaId.getText()
-                )
+                        StringUtils.isBlank(
+                                txtMembresiaId.getText()
+                        )
 
         ) {
 
