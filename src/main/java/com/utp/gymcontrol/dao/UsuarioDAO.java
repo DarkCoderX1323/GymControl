@@ -22,18 +22,19 @@ public class UsuarioDAO {
             stmt.setString(1, username);
             stmt.setString(2, password);
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
+                if (rs.next()) {
 
-                Usuario usuario = new Usuario();
+                    Usuario usuario = new Usuario();
 
-                usuario.setId(rs.getInt("id"));
-                usuario.setUsername(rs.getString("username"));
-                usuario.setRol(rs.getString("rol"));
-                usuario.setEstado(rs.getString("estado"));
+                    usuario.setId(rs.getInt("id"));
+                    usuario.setUsername(rs.getString("username"));
+                    usuario.setRol(rs.getString("rol"));
+                    usuario.setEstado(rs.getString("estado"));
 
-                return usuario;
+                    return usuario;
+                }
             }
 
         } catch (SQLException e) {
