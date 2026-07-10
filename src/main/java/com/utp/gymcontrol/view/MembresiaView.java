@@ -309,6 +309,8 @@ public class MembresiaView extends JFrame {
 
     private void cargarMembresias() {
 
+        membresiaDAO.actualizarMembresiasVencidas();
+
         modelo.setRowCount(0);
 
         try {

@@ -13,8 +13,8 @@ public class MembresiaDAO {
 
         String sql =
                 "INSERT INTO membresia " +
-                "(socio_id,tipo,fecha_inicio,fecha_fin,estado,tipo_membresia_id) " +
-                "VALUES (?,?,?,?,?,?)";
+                        "(socio_id,tipo,fecha_inicio,fecha_fin,estado,tipo_membresia_id) " +
+                        "VALUES (?,?,?,?,?,?)";
 
         try(Connection conn = ConexionDB.conectar();
             PreparedStatement stmt =
@@ -110,6 +110,28 @@ public class MembresiaDAO {
         }
 
         return lista;
+    }
+
+    public int actualizarMembresiasVencidas() {
+
+        String sql =
+                "UPDATE membresia " +
+                        "SET estado='vencida' " +
+                        "WHERE fecha_fin < CURDATE() " +
+                        "AND estado='activa'";
+
+        try(Connection conn = ConexionDB.conectar();
+            PreparedStatement stmt =
+                    conn.prepareStatement(sql)) {
+
+            return stmt.executeUpdate();
+
+        } catch(Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return 0;
     }
 
     public boolean eliminarMembresia(int id) {
