@@ -74,22 +74,22 @@ public class PagoDAO {
 
         String sql =
                 "SELECT\n" +
-"    p.id,\n" +
-"    s.id AS socio_id,\n" +
-"    s.nombre AS socio,\n" +
-"    p.monto,\n" +
-"    p.metodo_pago,\n" +
-"    p.fecha_pago,\n" +
-"    p.descripcion,\n" +
-"    tm.id AS membresia_id,\n" +
-"    tm.nombre AS membresia\n" +
-"FROM pago p\n" +
-"INNER JOIN socio s\n" +
-"    ON p.socio_id = s.id\n" +
-"INNER JOIN membresia m\n" +
-"    ON p.membresia_id = m.id\n" +
-"INNER JOIN tipo_membresia tm\n" +
-"    ON m.tipo_membresia_id = tm.id;";
+                        "    p.id,\n" +
+                        "    s.id AS socio_id,\n" +
+                        "    s.nombre AS socio,\n" +
+                        "    p.monto,\n" +
+                        "    p.metodo_pago,\n" +
+                        "    p.fecha_pago,\n" +
+                        "    p.descripcion,\n" +
+                        "    tm.id AS membresia_id,\n" +
+                        "    tm.nombre AS membresia\n" +
+                        "FROM pago p\n" +
+                        "INNER JOIN socio s\n" +
+                        "    ON p.socio_id = s.id\n" +
+                        "INNER JOIN membresia m\n" +
+                        "    ON p.membresia_id = m.id\n" +
+                        "INNER JOIN tipo_membresia tm\n" +
+                        "    ON m.tipo_membresia_id = tm.id;";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -166,52 +166,52 @@ public class PagoDAO {
 
             stmt.setInt(1, id);
 
-            ResultSet rs =
-                    stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
+                if (rs.next()) {
 
-                Pago pago =
-                        new Pago();
+                    Pago pago =
+                            new Pago();
 
-                pago.setId(
-                        rs.getInt("id")
-                );
-
-                pago.setSocioId(
-                        rs.getInt("socio_id")
-                );
-
-                pago.setMonto(
-                        rs.getDouble("monto")
-                );
-
-                pago.setMetodoPago(
-                        rs.getString("metodo_pago")
-                );
-
-                Timestamp fecha =
-                        rs.getTimestamp(
-                                "fecha_pago"
-                        );
-
-                if (fecha != null) {
-
-                    pago.setFechaPago(
-                            fecha.toLocalDateTime()
+                    pago.setId(
+                            rs.getInt("id")
                     );
+
+                    pago.setSocioId(
+                            rs.getInt("socio_id")
+                    );
+
+                    pago.setMonto(
+                            rs.getDouble("monto")
+                    );
+
+                    pago.setMetodoPago(
+                            rs.getString("metodo_pago")
+                    );
+
+                    Timestamp fecha =
+                            rs.getTimestamp(
+                                    "fecha_pago"
+                            );
+
+                    if (fecha != null) {
+
+                        pago.setFechaPago(
+                                fecha.toLocalDateTime()
+                        );
+                    }
+
+                    pago.setDescripcion(
+                            rs.getString("descripcion")
+                    );
+
+                    pago.setMembresiaId(
+                            rs.getInt("membresia_id")
+                    );
+
+                    return pago;
+
                 }
-
-                pago.setDescripcion(
-                        rs.getString("descripcion")
-                );
-
-                pago.setMembresiaId(
-                        rs.getInt("membresia_id")
-                );
-
-                return pago;
-
             }
 
         } catch (SQLException e) {
