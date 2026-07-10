@@ -17,6 +17,7 @@ public class SocioView extends JFrame {
     private JTextField txtDni;
     private JTextField txtTelefono;
     private JTextField txtEmail;
+    private JTextField txtBuscarDni;
 
     // Botones
     private JButton btnRegistrar;
@@ -24,6 +25,7 @@ public class SocioView extends JFrame {
     private JButton btnEliminar;
     private JButton btnLimpiar;
     private JButton btnVolver;
+    private JButton btnBuscar;
 
     // Tabla
     private JTable tablaSocios;
@@ -110,8 +112,41 @@ public class SocioView extends JFrame {
                 )
         );
 
-        panelFormulario.setPreferredSize(
-                new Dimension(320,500)
+        // El alto ya no se fija aquí: el panel crece según su
+        // contenido y el JScrollPane que lo envuelve se encarga
+        // de mostrar scroll si no entra en la ventana.
+
+        // =========================
+        // BUSCAR POR DNI
+        // =========================
+
+        txtBuscarDni = crearCampo(
+                panelFormulario,
+                "Buscar por DNI",
+                fuente
+        );
+
+        btnBuscar = crearBoton(
+                "Buscar",
+                new Color(120,0,215)
+        );
+
+        btnBuscar.addActionListener(
+                e -> buscarSocioPorDni()
+        );
+
+        panelFormulario.add(btnBuscar);
+
+        panelFormulario.add(
+                Box.createVerticalStrut(20)
+        );
+
+        panelFormulario.add(
+                new JSeparator()
+        );
+
+        panelFormulario.add(
+                Box.createVerticalStrut(20)
         );
 
         // =========================
@@ -272,8 +307,26 @@ public class SocioView extends JFrame {
         // AGREGAR COMPONENTES
         // =========================
 
+        JScrollPane scrollFormulario =
+                new JScrollPane(panelFormulario);
+
+        scrollFormulario.setPreferredSize(
+                new Dimension(340,600)
+        );
+
+        scrollFormulario.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
+
+        scrollFormulario.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        scrollFormulario.setHorizontalScrollBarPolicy(
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
         panelPrincipal.add(
-                panelFormulario,
+                scrollFormulario,
                 BorderLayout.WEST
         );
 
@@ -408,6 +461,43 @@ public class SocioView extends JFrame {
 
             txtEmail.setText(
                     modeloTabla.getValueAt(filaSeleccionada, 4).toString()
+            );
+        }
+    }
+
+    private void buscarSocioPorDni() {
+
+        String dni = txtBuscarDni.getText().trim();
+
+        if (StringUtils.isBlank(dni)) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ingrese un DNI para buscar."
+            );
+
+            return;
+        }
+
+        Socio socio = socioDAO.buscarPorDni(dni);
+
+        if (socio != null) {
+
+            txtNombre.setText(socio.getNombre());
+            txtDni.setText(socio.getDni());
+            txtTelefono.setText(socio.getTelefono());
+            txtEmail.setText(socio.getEmail());
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Socio encontrado: " + socio.getNombre()
+            );
+
+        } else {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se encontró ningún socio con ese DNI."
             );
         }
     }

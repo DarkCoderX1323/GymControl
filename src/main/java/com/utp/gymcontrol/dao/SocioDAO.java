@@ -85,20 +85,21 @@ public class SocioDAO {
 
         stmt.setString(1, dni);
 
-        ResultSet rs = stmt.executeQuery();
+        try (ResultSet rs = stmt.executeQuery()) {
 
-        if (rs.next()) {
+            if (rs.next()) {
 
-            Socio socio = new Socio();
+                Socio socio = new Socio();
 
-            socio.setId(rs.getInt("id"));
-            socio.setNombre(rs.getString("nombre"));
-            socio.setDni(rs.getString("dni"));
-            socio.setTelefono(rs.getString("telefono"));
-            socio.setEmail(rs.getString("email"));
-            socio.setEstado(rs.getString("estado"));
+                socio.setId(rs.getInt("id"));
+                socio.setNombre(rs.getString("nombre"));
+                socio.setDni(rs.getString("dni"));
+                socio.setTelefono(rs.getString("telefono"));
+                socio.setEmail(rs.getString("email"));
+                socio.setEstado(rs.getString("estado"));
 
-            return socio;
+                return socio;
+            }
         }
 
     } catch (SQLException e) {

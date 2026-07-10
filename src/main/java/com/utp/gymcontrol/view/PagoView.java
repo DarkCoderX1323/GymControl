@@ -22,6 +22,7 @@ public class PagoView extends JFrame {
     private JTextField txtMetodoPago;
     private JTextField txtDescripcion;
     private JTextField txtMembresiaId;
+    private JTextField txtBuscarId;
 
     // =========================
     // BOTONES
@@ -32,6 +33,7 @@ public class PagoView extends JFrame {
     private JButton btnEliminar;
     private JButton btnLimpiar;
     private JButton btnVolver;
+    private JButton btnBuscarPago;
 
     // =========================
     // TABLA
@@ -152,11 +154,43 @@ public class PagoView extends JFrame {
                 )
         );
 
-        panelFormulario.setPreferredSize(
-                new Dimension(
-                        320,
-                        500
-                )
+        // El alto ya no se fija aquí: el panel crece según su
+        // contenido y el JScrollPane que lo envuelve se encarga
+        // de mostrar scroll si no entra en la ventana.
+
+        // =========================
+        // BUSCAR POR ID
+        // =========================
+
+        txtBuscarId =
+                crearCampo(
+                        panelFormulario,
+                        "Buscar por ID Pago",
+                        fuente
+                );
+
+        btnBuscarPago =
+                crearBoton(
+                        "Buscar",
+                        new Color(120,0,215)
+                );
+
+        btnBuscarPago.addActionListener(
+                e -> buscarPagoPorId()
+        );
+
+        panelFormulario.add(btnBuscarPago);
+
+        panelFormulario.add(
+                Box.createVerticalStrut(20)
+        );
+
+        panelFormulario.add(
+                new JSeparator()
+        );
+
+        panelFormulario.add(
+                Box.createVerticalStrut(20)
         );
 
         txtSocioId =
@@ -363,8 +397,26 @@ public class PagoView extends JFrame {
                         tablaPagos
                 );
 
+        JScrollPane scrollFormulario =
+                new JScrollPane(panelFormulario);
+
+        scrollFormulario.setPreferredSize(
+                new Dimension(340,600)
+        );
+
+        scrollFormulario.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
+
+        scrollFormulario.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        scrollFormulario.setHorizontalScrollBarPolicy(
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
         panelPrincipal.add(
-                panelFormulario,
+                scrollFormulario,
                 BorderLayout.WEST
         );
 
@@ -532,6 +584,78 @@ public class PagoView extends JFrame {
 
         }
 
+    }
+
+    // =========================
+    // BUSCAR POR ID
+    // =========================
+
+    private void buscarPagoPorId() {
+
+        String texto = txtBuscarId.getText().trim();
+
+        if (StringUtils.isBlank(texto)) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Ingrese un ID de pago para buscar."
+            );
+
+            return;
+        }
+
+        int id;
+
+        try {
+
+            id = Integer.parseInt(texto);
+
+        } catch (NumberFormatException e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El ID debe ser un número."
+            );
+
+            return;
+        }
+
+        Pago pago = pagoDAO.buscarPago(id);
+
+        if (pago != null) {
+
+            txtSocioId.setText(
+                    String.valueOf(pago.getSocioId())
+            );
+
+            txtMonto.setText(
+                    String.valueOf(pago.getMonto())
+            );
+
+            txtMetodoPago.setText(
+                    pago.getMetodoPago()
+            );
+
+            txtDescripcion.setText(
+                    pago.getDescripcion()
+            );
+
+            txtMembresiaId.setText(
+                    String.valueOf(pago.getMembresiaId())
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Pago encontrado (ID " + pago.getId() + ")."
+            );
+
+        } else {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se encontró ningún pago con ese ID."
+            );
+        }
     }
 
     // =========================
