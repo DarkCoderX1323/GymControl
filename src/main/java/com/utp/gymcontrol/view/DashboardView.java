@@ -1,6 +1,7 @@
 package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.DashboardDAO;
+import com.utp.gymcontrol.dao.MembresiaDAO;
 
 import javax.swing.*;
 import java.awt.*;
@@ -58,6 +59,8 @@ public class DashboardView extends JFrame {
         // =========================
         // DATOS REALES
         // =========================
+
+        new MembresiaDAO().actualizarMembresiasVencidas();
 
         int socios =
                 dashboardDAO.contarSociosActivos();
@@ -331,7 +334,7 @@ public class DashboardView extends JFrame {
         panelAcciones.add(btnRegistrarPago);
 
         JButton btnGenerarReporte =
-            new JButton("Generar Reporte Socios");
+                new JButton("Generar Reporte Socios");
 
 
         btnGenerarReporte.addActionListener(e -> {
