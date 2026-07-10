@@ -257,7 +257,7 @@ public class DashboardView extends JFrame {
         panelCards.add(
                 crearTarjeta(
                         "Ingresos del Mes",
-                        "S/ " + ingresos,
+                        String.format("S/ %.2f", ingresos),
                         new Color(255, 140, 0)
                 )
         );
