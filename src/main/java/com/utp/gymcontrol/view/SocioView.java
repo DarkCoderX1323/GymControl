@@ -2,9 +2,11 @@ package com.utp.gymcontrol.view;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import com.utp.gymcontrol.dao.SocioDAO;
 import com.utp.gymcontrol.model.Socio;
+import com.utp.gymcontrol.utils.Tema;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
@@ -52,23 +54,21 @@ public class SocioView extends JFrame {
 
     private void iniciarComponentes() {
 
-        Font fuente = new Font("Segoe UI", Font.PLAIN, 15);
+        Font fuente = Tema.fuenteRegular().deriveFont(14f);
 
         // =========================
         // PANEL PRINCIPAL
         // =========================
 
         JPanel panelPrincipal = new JPanel(
-                new BorderLayout(15,15)
+                new BorderLayout(15, 15)
         );
 
-        panelPrincipal.setBackground(
-                new Color(30,30,30)
-        );
+        panelPrincipal.setBackground(Tema.FONDO);
 
         panelPrincipal.setBorder(
                 BorderFactory.createEmptyBorder(
-                        15,15,15,15
+                        20, 20, 20, 20
                 )
         );
 
@@ -77,14 +77,14 @@ public class SocioView extends JFrame {
         // =========================
 
         JLabel titulo = new JLabel(
-                "GYMCONTROL - Gestión de Socios",
+                "GYMCONTROL - Gestión de socios",
                 SwingConstants.CENTER
         );
 
-        titulo.setForeground(Color.WHITE);
+        titulo.setForeground(Tema.TEXTO_PRIMARIO);
 
         titulo.setFont(
-                new Font("Segoe UI", Font.BOLD, 28)
+                Tema.fuenteTitulo().deriveFont(24f)
         );
 
         panelPrincipal.add(titulo, BorderLayout.NORTH);
@@ -95,9 +95,7 @@ public class SocioView extends JFrame {
 
         JPanel panelFormulario = new JPanel();
 
-        panelFormulario.setBackground(
-                new Color(43,43,43)
-        );
+        panelFormulario.setBackground(Tema.SUPERFICIE);
 
         panelFormulario.setLayout(
                 new BoxLayout(
@@ -108,7 +106,7 @@ public class SocioView extends JFrame {
 
         panelFormulario.setBorder(
                 BorderFactory.createEmptyBorder(
-                        20,20,20,20
+                        20, 20, 20, 20
                 )
         );
 
@@ -128,7 +126,7 @@ public class SocioView extends JFrame {
 
         btnBuscar = crearBoton(
                 "Buscar",
-                new Color(120,0,215)
+                Tema.ACENTO
         );
 
         btnBuscar.addActionListener(
@@ -141,9 +139,11 @@ public class SocioView extends JFrame {
                 Box.createVerticalStrut(20)
         );
 
-        panelFormulario.add(
-                new JSeparator()
-        );
+        JSeparator separador = new JSeparator();
+        separador.setForeground(Tema.SUPERFICIE_CLARA);
+        separador.setBackground(Tema.SUPERFICIE_CLARA);
+
+        panelFormulario.add(separador);
 
         panelFormulario.add(
                 Box.createVerticalStrut(20)
@@ -187,27 +187,27 @@ public class SocioView extends JFrame {
 
         btnRegistrar = crearBoton(
                 "Registrar",
-                new Color(0,120,215)
+                Tema.ACENTO
         );
 
         btnActualizar = crearBoton(
                 "Actualizar",
-                new Color(0,153,51)
+                Tema.EXITO
         );
 
         btnEliminar = crearBoton(
                 "Eliminar",
-                new Color(204,51,51)
+                Tema.PELIGRO
         );
 
         btnLimpiar = crearBoton(
                 "Limpiar",
-                new Color(100,100,100)
+                Tema.SUPERFICIE_CLARA
         );
 
         btnVolver = crearBoton(
                 "Volver",
-                new Color(255,140,0)
+                Tema.SUPERFICIE_CLARA
         );
 
         // =========================
@@ -281,15 +281,7 @@ public class SocioView extends JFrame {
 
         tablaSocios = new JTable(modeloTabla);
 
-        tablaSocios.setRowHeight(35);
-
-        tablaSocios.setFont(
-                new Font("Segoe UI", Font.PLAIN, 14)
-        );
-
-        tablaSocios.getTableHeader().setFont(
-                new Font("Segoe UI", Font.BOLD, 14)
-        );
+        estilizarTabla(tablaSocios);
 
         tablaSocios.getSelectionModel()
                 .addListSelectionListener(e -> {
@@ -303,6 +295,9 @@ public class SocioView extends JFrame {
         JScrollPane scrollPane =
                 new JScrollPane(tablaSocios);
 
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(Tema.SUPERFICIE);
+
         // =========================
         // AGREGAR COMPONENTES
         // =========================
@@ -311,7 +306,7 @@ public class SocioView extends JFrame {
                 new JScrollPane(panelFormulario);
 
         scrollFormulario.setPreferredSize(
-                new Dimension(340,600)
+                new Dimension(340, 600)
         );
 
         scrollFormulario.setBorder(
@@ -352,20 +347,29 @@ public class SocioView extends JFrame {
 
         JLabel label = new JLabel(texto);
 
-        label.setForeground(Color.WHITE);
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
 
-        label.setFont(fuente);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JTextField campo = new JTextField();
 
         campo.setMaximumSize(
                 new Dimension(
-                        Integer.MAX_VALUE,
+                        ANCHO_CAMPO,
                         40
                 )
         );
 
         campo.setFont(fuente);
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        campo.setBorder(
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        );
 
         panel.add(label);
 
@@ -382,6 +386,8 @@ public class SocioView extends JFrame {
         return campo;
     }
 
+    private static final int ANCHO_CAMPO = 280;
+
     private JButton crearBoton(
             String texto,
             Color color
@@ -391,16 +397,14 @@ public class SocioView extends JFrame {
 
         boton.setBackground(color);
 
-        boton.setForeground(Color.WHITE);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
 
         boton.setFocusPainted(false);
 
+        boton.setBorderPainted(false);
+
         boton.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        15
-                )
+                Tema.fuenteBoton().deriveFont(14f)
         );
 
         boton.setCursor(
@@ -409,14 +413,41 @@ public class SocioView extends JFrame {
                 )
         );
 
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        boton.setPreferredSize(
+                new Dimension(ANCHO_CAMPO, 42)
+        );
+
         boton.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        45
-                )
+                new Dimension(ANCHO_CAMPO, 42)
         );
 
         return boton;
+    }
+
+    private void estilizarTabla(JTable tabla) {
+
+        tabla.setRowHeight(32);
+
+        tabla.setFont(
+                Tema.fuenteRegular().deriveFont(13f)
+        );
+
+        tabla.setBackground(Tema.SUPERFICIE);
+        tabla.setForeground(Tema.TEXTO_PRIMARIO);
+        tabla.setGridColor(Tema.SUPERFICIE_CLARA);
+        tabla.setSelectionBackground(Tema.ACENTO);
+        tabla.setSelectionForeground(Tema.TEXTO_PRIMARIO);
+
+        JTableHeader header = tabla.getTableHeader();
+
+        header.setFont(
+                Tema.fuenteBoton().deriveFont(13f)
+        );
+
+        header.setBackground(Tema.SUPERFICIE_CLARA);
+        header.setForeground(Tema.TEXTO_PRIMARIO);
     }
 
     private void cargarSocios() {
