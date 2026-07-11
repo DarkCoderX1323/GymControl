@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.utp.gymcontrol.utils.ExcelReportGenerator;
 import com.utp.gymcontrol.utils.DashboardUtils;
+import com.utp.gymcontrol.utils.Tema;
+import com.utp.gymcontrol.utils.PanelRedondeado;
 
 public class DashboardView extends JFrame {
 
@@ -78,9 +80,7 @@ public class DashboardView extends JFrame {
         JPanel panelPrincipal =
                 new JPanel(new BorderLayout());
 
-        panelPrincipal.setBackground(
-                new Color(30, 30, 30)
-        );
+        panelPrincipal.setBackground(Tema.FONDO);
 
         // =========================
         // MENU LATERAL
@@ -88,49 +88,54 @@ public class DashboardView extends JFrame {
 
         JPanel panelMenu = new JPanel();
 
-        panelMenu.setBackground(
-                new Color(25, 25, 25)
-        );
+        panelMenu.setBackground(Tema.FONDO);
 
         panelMenu.setPreferredSize(
-                new Dimension(250, 700)
+                new Dimension(240, 700)
         );
 
-        panelMenu.setLayout(
-                new GridLayout(7, 1, 10, 10)
-        );
-
-        JLabel lblTitulo =
-                new JLabel("GYMCONTROL");
-
-        lblTitulo.setForeground(Color.WHITE);
-
-        lblTitulo.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        24
+        panelMenu.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(
+                                0, 0, 0, 1, Tema.SUPERFICIE_CLARA
+                        ),
+                        BorderFactory.createEmptyBorder(20, 14, 20, 14)
                 )
         );
 
-        lblTitulo.setHorizontalAlignment(
-                SwingConstants.CENTER
-        );
+        panelMenu.setLayout(new BoxLayout(panelMenu, BoxLayout.Y_AXIS));
 
-        btnSocios =
-                new JButton("Socios");
+        // =========================
+        // LOGO
+        // =========================
 
-        btnMembresias =
-                new JButton("Membresías");
+        JPanel panelLogo = crearLogo();
+        panelLogo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panelLogo.setMaximumSize(new Dimension(240, 40));
 
-        btnPagos =
-                new JButton("Pagos");
+        panelMenu.add(panelLogo);
+        panelMenu.add(Box.createVerticalStrut(24));
 
-        btnReportes =
-                new JButton("Reportes");
+        // =========================
+        // ITEM ACTIVO: DASHBOARD
+        // =========================
 
-        btnCerrarSesion =
-                new JButton("Cerrar Sesión");
+        JPanel itemActivo = crearItemActivo("Dashboard");
+        itemActivo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        itemActivo.setMaximumSize(new Dimension(240, 40));
+
+        panelMenu.add(itemActivo);
+        panelMenu.add(Box.createVerticalStrut(4));
+
+        // =========================
+        // ITEMS DE NAVEGACION
+        // =========================
+
+        btnSocios = crearItemMenu("Socios");
+        btnMembresias = crearItemMenu("Membresías");
+        btnPagos = crearItemMenu("Pagos");
+        btnReportes = crearItemMenu("Reportes");
+        btnCerrarSesion = crearItemMenu("Cerrar sesión");
 
         btnSocios.addActionListener(e -> {
 
@@ -180,12 +185,26 @@ public class DashboardView extends JFrame {
 
         });
 
-        panelMenu.add(lblTitulo);
-        panelMenu.add(btnSocios);
-        panelMenu.add(btnMembresias);
-        panelMenu.add(btnPagos);
-        panelMenu.add(btnReportes);
-        panelMenu.add(new JLabel());
+        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnReportes}) {
+            item.setAlignmentX(Component.LEFT_ALIGNMENT);
+            item.setMaximumSize(new Dimension(240, 40));
+            panelMenu.add(item);
+            panelMenu.add(Box.createVerticalStrut(4));
+        }
+
+        panelMenu.add(Box.createVerticalGlue());
+
+        JSeparator separador = new JSeparator();
+        separador.setForeground(Tema.SUPERFICIE_CLARA);
+        separador.setBackground(Tema.SUPERFICIE_CLARA);
+        separador.setAlignmentX(Component.LEFT_ALIGNMENT);
+        separador.setMaximumSize(new Dimension(240, 1));
+
+        panelMenu.add(separador);
+        panelMenu.add(Box.createVerticalStrut(4));
+
+        btnCerrarSesion.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnCerrarSesion.setMaximumSize(new Dimension(240, 40));
         panelMenu.add(btnCerrarSesion);
 
         // =========================
@@ -195,29 +214,25 @@ public class DashboardView extends JFrame {
         JPanel panelCentro =
                 new JPanel(new BorderLayout());
 
-        panelCentro.setBackground(
-                new Color(40, 40, 40)
-        );
+        panelCentro.setBackground(Tema.FONDO);
 
         panelCentro.setBorder(
                 BorderFactory.createEmptyBorder(
-                        20, 20, 20, 20
+                        24, 24, 24, 24
                 )
         );
 
         JLabel tituloDashboard =
                 new JLabel("Dashboard");
 
-        tituloDashboard.setForeground(
-                Color.WHITE
-        );
+        tituloDashboard.setForeground(Tema.TEXTO_PRIMARIO);
 
         tituloDashboard.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        30
-                )
+                Tema.fuenteTitulo().deriveFont(26f)
+        );
+
+        tituloDashboard.setBorder(
+                BorderFactory.createEmptyBorder(0, 0, 20, 0)
         );
 
         // =========================
@@ -234,37 +249,42 @@ public class DashboardView extends JFrame {
                         )
                 );
 
-        panelCards.setBackground(
-                new Color(40, 40, 40)
-        );
+        panelCards.setBackground(Tema.FONDO);
 
         panelCards.add(
                 crearTarjeta(
-                        "Socios Activos",
+                        "Socios activos",
                         String.valueOf(socios),
-                        new Color(0, 120, 215)
+                        Tema.ACENTO
                 )
         );
 
         panelCards.add(
                 crearTarjeta(
-                        "Membresías Activas",
+                        "Membresías activas",
                         String.valueOf(membresias),
-                        new Color(0, 153, 51)
+                        Tema.EXITO
                 )
         );
 
         panelCards.add(
                 crearTarjeta(
-                        "Ingresos del Mes",
+                        "Ingresos del mes",
                         String.format("S/ %.2f", ingresos),
-                        new Color(255, 140, 0)
+                        Tema.ADVERTENCIA
                 )
         );
 
         // =========================
         // ACCIONES RAPIDAS
         // =========================
+
+        JLabel lblAcciones = new JLabel("Acciones rápidas");
+        lblAcciones.setForeground(Tema.TEXTO_SECUNDARIO);
+        lblAcciones.setFont(Tema.fuenteEtiqueta());
+        lblAcciones.setBorder(
+                BorderFactory.createEmptyBorder(20, 0, 10, 0)
+        );
 
         JPanel panelAcciones =
                 new JPanel(
@@ -276,22 +296,10 @@ public class DashboardView extends JFrame {
                         )
                 );
 
-        panelAcciones.setBackground(
-                new Color(40, 40, 40)
-        );
-
-        panelAcciones.setBorder(
-                BorderFactory.createTitledBorder(
-                        BorderFactory.createLineBorder(
-                                Color.GRAY
-                        ),
-                        "Acciones Rápidas"
-                )
-        );
-
+        panelAcciones.setBackground(Tema.FONDO);
 
         JButton btnNuevoSocio =
-                new JButton("Nuevo Socio");
+                crearBotonAccion("Nuevo socio");
 
         btnNuevoSocio.addActionListener(e -> {
 
@@ -304,7 +312,7 @@ public class DashboardView extends JFrame {
         });
 
         JButton btnNuevaMembresia =
-                new JButton("Nueva Membresía");
+                crearBotonAccion("Nueva membresía");
 
         btnNuevaMembresia.addActionListener(e -> {
 
@@ -317,7 +325,7 @@ public class DashboardView extends JFrame {
         });
 
         JButton btnRegistrarPago =
-                new JButton("Registrar Pago");
+                crearBotonAccion("Registrar pago");
 
         btnRegistrarPago.addActionListener(e -> {
 
@@ -334,7 +342,7 @@ public class DashboardView extends JFrame {
         panelAcciones.add(btnRegistrarPago);
 
         JButton btnGenerarReporte =
-                new JButton("Generar Reporte Socios");
+                crearBotonAccion("Generar reporte");
 
 
         btnGenerarReporte.addActionListener(e -> {
@@ -366,9 +374,12 @@ public class DashboardView extends JFrame {
         JPanel contenido =
                 new JPanel(new BorderLayout());
 
-        contenido.setBackground(
-                new Color(40, 40, 40)
-        );
+        contenido.setBackground(Tema.FONDO);
+
+        JPanel bloqueAcciones = new JPanel(new BorderLayout());
+        bloqueAcciones.setBackground(Tema.FONDO);
+        bloqueAcciones.add(lblAcciones, BorderLayout.NORTH);
+        bloqueAcciones.add(panelAcciones, BorderLayout.CENTER);
 
         contenido.add(
                 panelCards,
@@ -376,7 +387,7 @@ public class DashboardView extends JFrame {
         );
 
         contenido.add(
-                panelAcciones,
+                bloqueAcciones,
                 BorderLayout.CENTER
         );
 
@@ -407,58 +418,145 @@ public class DashboardView extends JFrame {
         add(panelPrincipal);
     }
 
+    /**
+     * Logo compacto para el sidebar: cuadrado con acento + iniciales "GC" +
+     * texto "GymControl".
+     */
+    private JPanel crearLogo() {
+
+        JPanel contenedor = new JPanel();
+        contenedor.setOpaque(false);
+        contenedor.setLayout(new BoxLayout(contenedor, BoxLayout.X_AXIS));
+
+        PanelRedondeado cuadroLogo = new PanelRedondeado(8, Tema.ACENTO);
+        cuadroLogo.setPreferredSize(new Dimension(32, 32));
+        cuadroLogo.setMaximumSize(new Dimension(32, 32));
+        cuadroLogo.setLayout(new GridBagLayout());
+
+        JLabel lblIniciales = new JLabel("GC");
+        lblIniciales.setForeground(Tema.TEXTO_PRIMARIO);
+        lblIniciales.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        cuadroLogo.add(lblIniciales);
+
+        JLabel lblNombre = new JLabel("GymControl");
+        lblNombre.setForeground(Tema.TEXTO_PRIMARIO);
+        lblNombre.setFont(Tema.fuenteBoton());
+        lblNombre.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+
+        contenedor.add(cuadroLogo);
+        contenedor.add(lblNombre);
+
+        return contenedor;
+    }
+
+    /**
+     * Item de sidebar resaltado como la sección actualmente activa
+     * (no es clickeable, ya que representa la vista en la que ya estamos).
+     */
+    private JPanel crearItemActivo(String texto) {
+
+        PanelRedondeado item = new PanelRedondeado(10, Tema.SUPERFICIE);
+        item.setLayout(new BorderLayout());
+        item.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+
+        JLabel lbl = new JLabel(texto);
+        lbl.setForeground(Tema.TEXTO_PRIMARIO);
+        lbl.setFont(Tema.fuenteBoton().deriveFont(14f));
+
+        item.add(lbl, BorderLayout.WEST);
+
+        return item;
+    }
+
+    /**
+     * Item de navegación del sidebar con estilo plano (sin fondo, sin
+     * borde), consistente con el resto del menú.
+     */
+    private JButton crearItemMenu(String texto) {
+
+        JButton boton = new JButton(texto);
+        boton.setHorizontalAlignment(SwingConstants.LEFT);
+        boton.setForeground(Tema.TEXTO_SECUNDARIO);
+        boton.setFont(Tema.fuenteRegular().deriveFont(14f));
+        boton.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        boton.setContentAreaFilled(false);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        return boton;
+    }
+
+    /**
+     * Tarjeta de métrica con franja de acento a la izquierda, en vez del
+     * relleno sólido tipo "banner" que tenía el diseño anterior.
+     */
     private JPanel crearTarjeta(
             String titulo,
             String valor,
-            Color color
+            Color colorAcento
     ) {
 
-        JPanel card = new JPanel();
+        JPanel tarjeta = new JPanel(new BorderLayout());
 
-        card.setBackground(color);
+        tarjeta.setBackground(Tema.SUPERFICIE);
 
-        card.setLayout(
-                new BorderLayout()
-        );
-
-        card.setBorder(
-                BorderFactory.createEmptyBorder(
-                        15, 15, 15, 15
+        tarjeta.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(
+                                0, 4, 0, 0, colorAcento
+                        ),
+                        BorderFactory.createEmptyBorder(16, 14, 16, 16)
                 )
         );
 
         JLabel lblTitulo =
                 new JLabel(titulo);
 
-        lblTitulo.setForeground(
-                Color.WHITE
-        );
+        lblTitulo.setForeground(Tema.TEXTO_SECUNDARIO);
+        lblTitulo.setFont(Tema.fuenteEtiqueta());
 
         JLabel lblValor =
                 new JLabel(valor);
 
-        lblValor.setForeground(
-                Color.WHITE
-        );
+        lblValor.setForeground(Tema.TEXTO_PRIMARIO);
 
         lblValor.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        28
-                )
+                Tema.fuenteTitulo().deriveFont(24f)
         );
 
-        card.add(
+        lblValor.setBorder(
+                BorderFactory.createEmptyBorder(6, 0, 0, 0)
+        );
+
+        tarjeta.add(
                 lblTitulo,
                 BorderLayout.NORTH
         );
 
-        card.add(
+        tarjeta.add(
                 lblValor,
                 BorderLayout.CENTER
         );
 
-        return card;
+        return tarjeta;
+    }
+
+    /**
+     * Botón para el bloque de "Acciones rápidas": superficie clara, sin
+     * relleno gris genérico.
+     */
+    private JButton crearBotonAccion(String texto) {
+
+        JButton boton = new JButton(texto);
+        boton.setBackground(Tema.SUPERFICIE_CLARA);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
+        boton.setFont(Tema.fuenteRegular());
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        return boton;
     }
 }

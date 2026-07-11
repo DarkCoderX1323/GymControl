@@ -2,14 +2,18 @@ package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.PagoDAO;
 import com.utp.gymcontrol.model.Pago;
+import com.utp.gymcontrol.utils.Tema;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 public class PagoView extends JFrame {
+
+    private static final int ANCHO_CAMPO = 280;
 
     private PagoDAO pagoDAO;
 
@@ -50,7 +54,7 @@ public class PagoView extends JFrame {
 
         setTitle("GymControl - Gestión de Pagos");
 
-        setSize(1200,700);
+        setSize(1200, 700);
 
         setLocationRelativeTo(null);
 
@@ -64,35 +68,16 @@ public class PagoView extends JFrame {
 
     private void iniciarComponentes() {
 
-        Font fuente =
-                new Font(
-                        "Segoe UI",
-                        Font.PLAIN,
-                        15
-                );
+        Font fuente = Tema.fuenteRegular().deriveFont(14f);
 
         JPanel panelPrincipal =
-                new JPanel(
-                        new BorderLayout(
-                                15,
-                                15
-                        )
-                );
+                new JPanel(new BorderLayout(15, 15));
 
-        panelPrincipal.setBackground(
-                new Color(
-                        30,
-                        30,
-                        30
-                )
-        );
+        panelPrincipal.setBackground(Tema.FONDO);
 
         panelPrincipal.setBorder(
                 BorderFactory.createEmptyBorder(
-                        15,
-                        15,
-                        15,
-                        15
+                        20, 20, 20, 20
                 )
         );
 
@@ -102,20 +87,14 @@ public class PagoView extends JFrame {
 
         JLabel titulo =
                 new JLabel(
-                        "GYMCONTROL - Gestión de Pagos",
+                        "GYMCONTROL - Gestión de pagos",
                         SwingConstants.CENTER
                 );
 
-        titulo.setForeground(
-                Color.WHITE
-        );
+        titulo.setForeground(Tema.TEXTO_PRIMARIO);
 
         titulo.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        28
-                )
+                Tema.fuenteTitulo().deriveFont(24f)
         );
 
         panelPrincipal.add(
@@ -130,13 +109,7 @@ public class PagoView extends JFrame {
         JPanel panelFormulario =
                 new JPanel();
 
-        panelFormulario.setBackground(
-                new Color(
-                        43,
-                        43,
-                        43
-                )
-        );
+        panelFormulario.setBackground(Tema.SUPERFICIE);
 
         panelFormulario.setLayout(
                 new BoxLayout(
@@ -147,10 +120,7 @@ public class PagoView extends JFrame {
 
         panelFormulario.setBorder(
                 BorderFactory.createEmptyBorder(
-                        20,
-                        20,
-                        20,
-                        20
+                        20, 20, 20, 20
                 )
         );
 
@@ -165,14 +135,14 @@ public class PagoView extends JFrame {
         txtBuscarId =
                 crearCampo(
                         panelFormulario,
-                        "Buscar por ID Pago",
+                        "Buscar por ID pago",
                         fuente
                 );
 
         btnBuscarPago =
                 crearBoton(
                         "Buscar",
-                        new Color(120,0,215)
+                        Tema.ACENTO
                 );
 
         btnBuscarPago.addActionListener(
@@ -185,9 +155,11 @@ public class PagoView extends JFrame {
                 Box.createVerticalStrut(20)
         );
 
-        panelFormulario.add(
-                new JSeparator()
-        );
+        JSeparator separador = new JSeparator();
+        separador.setForeground(Tema.SUPERFICIE_CLARA);
+        separador.setBackground(Tema.SUPERFICIE_CLARA);
+
+        panelFormulario.add(separador);
 
         panelFormulario.add(
                 Box.createVerticalStrut(20)
@@ -196,7 +168,7 @@ public class PagoView extends JFrame {
         txtSocioId =
                 crearCampo(
                         panelFormulario,
-                        "ID Socio",
+                        "ID socio",
                         fuente
                 );
 
@@ -210,7 +182,7 @@ public class PagoView extends JFrame {
         txtMetodoPago =
                 crearCampo(
                         panelFormulario,
-                        "Método de Pago",
+                        "Método de pago",
                         fuente
                 );
 
@@ -224,14 +196,12 @@ public class PagoView extends JFrame {
         txtMembresiaId =
                 crearCampo(
                         panelFormulario,
-                        "ID Membresía",
+                        "ID membresía",
                         fuente
                 );
 
         panelFormulario.add(
-                Box.createVerticalStrut(
-                        20
-                )
+                Box.createVerticalStrut(20)
         );
 
         // =========================
@@ -241,46 +211,30 @@ public class PagoView extends JFrame {
         btnRegistrar =
                 crearBoton(
                         "Registrar",
-                        new Color(
-                                0,
-                                120,
-                                215
-                        )
+                        Tema.ACENTO
                 );
 
         btnActualizar =
                 crearBoton(
                         "Actualizar",
-                        new Color(
-                                0,
-                                153,
-                                51
-                        )
+                        Tema.EXITO
                 );
 
         btnEliminar =
                 crearBoton(
                         "Eliminar",
-                        new Color(
-                                204,
-                                51,
-                                51
-                        )
+                        Tema.PELIGRO
                 );
 
         btnLimpiar =
                 crearBoton(
                         "Limpiar",
-                        new Color(
-                                100,
-                                100,
-                                100
-                        )
+                        Tema.SUPERFICIE_CLARA
                 );
 
         btnVolver = crearBoton(
                 "Volver",
-                new Color(255,140,0)
+                Tema.SUPERFICIE_CLARA
         );
 
         // =========================
@@ -312,25 +266,19 @@ public class PagoView extends JFrame {
         panelFormulario.add(btnRegistrar);
 
         panelFormulario.add(
-                Box.createVerticalStrut(
-                        10
-                )
+                Box.createVerticalStrut(10)
         );
 
         panelFormulario.add(btnActualizar);
 
         panelFormulario.add(
-                Box.createVerticalStrut(
-                        10
-                )
+                Box.createVerticalStrut(10)
         );
 
         panelFormulario.add(btnEliminar);
 
         panelFormulario.add(
-                Box.createVerticalStrut(
-                        10
-                )
+                Box.createVerticalStrut(10)
         );
 
         panelFormulario.add(btnLimpiar);
@@ -357,29 +305,9 @@ public class PagoView extends JFrame {
         modeloTabla.addColumn("Membresía");
 
         tablaPagos =
-                new JTable(
-                        modeloTabla
-                );
+                new JTable(modeloTabla);
 
-        tablaPagos.setRowHeight(
-                35
-        );
-
-        tablaPagos.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.PLAIN,
-                        14
-                )
-        );
-
-        tablaPagos.getTableHeader().setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        14
-                )
-        );
+        estilizarTabla(tablaPagos);
 
         tablaPagos.getSelectionModel()
                 .addListSelectionListener(e -> {
@@ -393,15 +321,16 @@ public class PagoView extends JFrame {
                 });
 
         JScrollPane scroll =
-                new JScrollPane(
-                        tablaPagos
-                );
+                new JScrollPane(tablaPagos);
+
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(Tema.SUPERFICIE);
 
         JScrollPane scrollFormulario =
                 new JScrollPane(panelFormulario);
 
         scrollFormulario.setPreferredSize(
-                new Dimension(340,600)
+                new Dimension(340, 600)
         );
 
         scrollFormulario.setBorder(
@@ -444,38 +373,38 @@ public class PagoView extends JFrame {
         JLabel label =
                 new JLabel(texto);
 
-        label.setForeground(
-                Color.WHITE
-        );
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
 
-        label.setFont(fuente);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JTextField campo =
                 new JTextField();
 
         campo.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        40
-                )
+                new Dimension(ANCHO_CAMPO, 40)
         );
 
         campo.setFont(fuente);
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        campo.setBorder(
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        );
 
         panel.add(label);
 
         panel.add(
-                Box.createVerticalStrut(
-                        5
-                )
+                Box.createVerticalStrut(5)
         );
 
         panel.add(campo);
 
         panel.add(
-                Box.createVerticalStrut(
-                        15
-                )
+                Box.createVerticalStrut(15)
         );
 
         return campo;
@@ -492,11 +421,11 @@ public class PagoView extends JFrame {
 
         boton.setBackground(color);
 
-        boton.setForeground(
-                Color.WHITE
-        );
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
 
         boton.setFocusPainted(false);
+
+        boton.setBorderPainted(false);
 
         boton.setCursor(
                 new Cursor(
@@ -504,24 +433,48 @@ public class PagoView extends JFrame {
                 )
         );
 
+        boton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        boton.setPreferredSize(
+                new Dimension(ANCHO_CAMPO, 42)
+        );
+
         boton.setMaximumSize(
-                new Dimension(
-                        Integer.MAX_VALUE,
-                        45
-                )
+                new Dimension(ANCHO_CAMPO, 42)
         );
 
         boton.setFont(
-                new Font(
-                        "Segoe UI",
-                        Font.BOLD,
-                        15
-                )
+                Tema.fuenteBoton().deriveFont(14f)
         );
 
         return boton;
 
     }
+
+    private void estilizarTabla(JTable tabla) {
+
+        tabla.setRowHeight(32);
+
+        tabla.setFont(
+                Tema.fuenteRegular().deriveFont(13f)
+        );
+
+        tabla.setBackground(Tema.SUPERFICIE);
+        tabla.setForeground(Tema.TEXTO_PRIMARIO);
+        tabla.setGridColor(Tema.SUPERFICIE_CLARA);
+        tabla.setSelectionBackground(Tema.ACENTO);
+        tabla.setSelectionForeground(Tema.TEXTO_PRIMARIO);
+
+        JTableHeader header = tabla.getTableHeader();
+
+        header.setFont(
+                Tema.fuenteBoton().deriveFont(13f)
+        );
+
+        header.setBackground(Tema.SUPERFICIE_CLARA);
+        header.setForeground(Tema.TEXTO_PRIMARIO);
+    }
+
     // =========================
     // CARGAR PAGOS
     // =========================
@@ -563,23 +516,23 @@ public class PagoView extends JFrame {
         if (fila != -1) {
 
             txtSocioId.setText(
-                    modeloTabla.getValueAt(fila,1).toString()
+                    modeloTabla.getValueAt(fila, 1).toString()
             );
 
             txtMonto.setText(
-                    modeloTabla.getValueAt(fila,2).toString()
+                    modeloTabla.getValueAt(fila, 2).toString()
             );
 
             txtMetodoPago.setText(
-                    modeloTabla.getValueAt(fila,3).toString()
+                    modeloTabla.getValueAt(fila, 3).toString()
             );
 
             txtDescripcion.setText(
-                    modeloTabla.getValueAt(fila,5).toString()
+                    modeloTabla.getValueAt(fila, 5).toString()
             );
 
             txtMembresiaId.setText(
-                    modeloTabla.getValueAt(fila,6).toString()
+                    modeloTabla.getValueAt(fila, 6).toString()
             );
 
         }
@@ -752,7 +705,7 @@ public class PagoView extends JFrame {
 
         pago.setId(
                 Integer.parseInt(
-                        modeloTabla.getValueAt(fila,0).toString()
+                        modeloTabla.getValueAt(fila, 0).toString()
                 )
         );
 
