@@ -6,9 +6,11 @@ import com.utp.gymcontrol.dao.TipoMembresiaDAO;
 import com.utp.gymcontrol.model.Membresia;
 import com.utp.gymcontrol.model.Socio;
 import com.utp.gymcontrol.model.TipoMembresia;
+import com.utp.gymcontrol.utils.Tema;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -48,20 +50,52 @@ public class MembresiaView extends JFrame {
 
     private void iniciarComponentes() {
 
+        // =========================
+        // PANEL PRINCIPAL
+        // =========================
+
         JPanel principal =
                 new JPanel(new BorderLayout(15, 15));
 
+        principal.setBackground(Tema.FONDO);
+
         principal.setBorder(
                 BorderFactory.createEmptyBorder(
-                        15, 15, 15, 15
+                        20, 20, 20, 20
                 )
         );
 
+        // =========================
+        // TITULO
+        // =========================
+
+        JLabel titulo = new JLabel("GYMCONTROL - Membresías");
+        titulo.setForeground(Tema.TEXTO_PRIMARIO);
+        titulo.setFont(Tema.fuenteTitulo().deriveFont(24f));
+        titulo.setBorder(BorderFactory.createEmptyBorder(0, 0, 16, 0));
+
+        principal.add(titulo, BorderLayout.NORTH);
+
+        // =========================
+        // FORMULARIO
+        // =========================
+
         JPanel formulario =
-                new JPanel(new GridLayout(5, 2, 10, 10));
+                new JPanel(new GridBagLayout());
+
+        formulario.setBackground(Tema.SUPERFICIE);
+
+        formulario.setBorder(
+                BorderFactory.createEmptyBorder(
+                        18, 18, 18, 18
+                )
+        );
 
         cbSocios = new JComboBox<>();
         cbTipos = new JComboBox<>();
+
+        estilizarCombo(cbSocios);
+        estilizarCombo(cbTipos);
 
         txtInicio = new JTextField();
         txtFin = new JTextField();
@@ -69,34 +103,78 @@ public class MembresiaView extends JFrame {
         txtInicio.setEditable(false);
         txtFin.setEditable(false);
 
+        estilizarCampo(txtInicio);
+        estilizarCampo(txtFin);
+
         btnRegistrar =
-                new JButton("Registrar Membresía");
+                new JButton("Registrar membresía");
+
+        estilizarBoton(btnRegistrar, Tema.ACENTO);
 
         btnVolver = new JButton("Volver");
 
-        btnVolver.setBackground(
-                new Color(255,140,0)
-        );
+        estilizarBoton(btnVolver, Tema.SUPERFICIE_CLARA);
 
-        btnVolver.setForeground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(6, 6, 6, 6);
 
-        formulario.add(new JLabel("Socio"));
-        formulario.add(cbSocios);
+        // Columna izquierda: etiquetas (ancho fijo, no se estiran)
+        // Columna derecha: campos/combos (ocupan el espacio restante)
+        gbc.gridx = 0;
+        gbc.weightx = 0;
 
-        formulario.add(new JLabel("Tipo de Membresía"));
-        formulario.add(cbTipos);
+        gbc.gridy = 0;
+        formulario.add(crearEtiqueta("Socio"), gbc);
 
-        formulario.add(new JLabel("Fecha Inicio"));
-        formulario.add(txtInicio);
+        gbc.gridy = 1;
+        formulario.add(crearEtiqueta("Tipo de membresía"), gbc);
 
-        formulario.add(new JLabel("Fecha Fin"));
-        formulario.add(txtFin);
+        gbc.gridy = 2;
+        formulario.add(crearEtiqueta("Fecha inicio"), gbc);
 
-        formulario.add(new JLabel(""));
-        formulario.add(btnRegistrar);
-        formulario.add(new JLabel());
+        gbc.gridy = 3;
+        formulario.add(crearEtiqueta("Fecha fin"), gbc);
 
-        formulario.add(btnVolver);
+        gbc.gridx = 1;
+        gbc.weightx = 1;
+
+        gbc.gridy = 0;
+        formulario.add(cbSocios, gbc);
+
+        gbc.gridy = 1;
+        formulario.add(cbTipos, gbc);
+
+        gbc.gridy = 2;
+        formulario.add(txtInicio, gbc);
+
+        gbc.gridy = 3;
+        formulario.add(txtFin, gbc);
+
+        // Botones: compactos y centrados, en un sub-panel aparte para que
+        // no hereden el ancho de las columnas del formulario
+        btnRegistrar.setPreferredSize(new Dimension(180, 36));
+        btnVolver.setPreferredSize(new Dimension(110, 36));
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
+        panelBotones.setOpaque(false);
+        panelBotones.add(btnRegistrar);
+        panelBotones.add(btnVolver);
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(16, 6, 6, 6);
+        formulario.add(panelBotones, gbc);
+
+        gbc.gridwidth = 1;
+
+        // =========================
+        // TABLA
+        // =========================
 
         modelo = new DefaultTableModel();
 
@@ -109,8 +187,13 @@ public class MembresiaView extends JFrame {
 
         tabla = new JTable(modelo);
 
+        estilizarTabla(tabla);
+
         JScrollPane scroll =
                 new JScrollPane(tabla);
+
+        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.getViewport().setBackground(Tema.SUPERFICIE);
 
         principal.add(formulario,
                 BorderLayout.NORTH);
@@ -141,6 +224,65 @@ public class MembresiaView extends JFrame {
 
         });
     }
+
+    // =========================
+    // HELPERS DE ESTILO
+    // =========================
+
+    private JLabel crearEtiqueta(String texto) {
+
+        JLabel label = new JLabel(texto);
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        return label;
+    }
+
+    private void estilizarCampo(JTextField campo) {
+
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setFont(Tema.fuenteRegular().deriveFont(14f));
+        campo.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+    }
+
+    private void estilizarCombo(JComboBox<?> combo) {
+
+        combo.setBackground(Tema.SUPERFICIE_CLARA);
+        combo.setForeground(Tema.TEXTO_PRIMARIO);
+        combo.setFont(Tema.fuenteRegular().deriveFont(14f));
+    }
+
+    private void estilizarBoton(JButton boton, Color colorFondo) {
+
+        boton.setBackground(colorFondo);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
+        boton.setFont(Tema.fuenteBoton().deriveFont(14f));
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    private void estilizarTabla(JTable tabla) {
+
+        tabla.setBackground(Tema.SUPERFICIE);
+        tabla.setForeground(Tema.TEXTO_PRIMARIO);
+        tabla.setGridColor(Tema.SUPERFICIE_CLARA);
+        tabla.setRowHeight(32);
+        tabla.setFont(Tema.fuenteRegular().deriveFont(13f));
+        tabla.setSelectionBackground(Tema.ACENTO);
+        tabla.setSelectionForeground(Tema.TEXTO_PRIMARIO);
+
+        JTableHeader header = tabla.getTableHeader();
+        header.setBackground(Tema.SUPERFICIE_CLARA);
+        header.setForeground(Tema.TEXTO_PRIMARIO);
+        header.setFont(Tema.fuenteBoton().deriveFont(13f));
+    }
+
+    // =========================
+    // LOGICA (sin cambios)
+    // =========================
 
     private void cargarSocios() {
 
