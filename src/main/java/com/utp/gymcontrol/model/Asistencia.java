@@ -15,6 +15,11 @@ public class Asistencia {
     private LocalTime hora;
     private LocalDateTime registradoEn;
 
+    // Campos de solo lectura, poblados por AsistenciaDAO al hacer JOIN con
+    // socio. No existen como columnas propias en la tabla `asistencia`.
+    private String nombreSocio;
+    private String dniSocio;
+
     public Asistencia() {
     }
 
@@ -73,6 +78,22 @@ public class Asistencia {
 
     public void setRegistradoEn(LocalDateTime registradoEn) {
         this.registradoEn = registradoEn;
+    }
+
+    public String getNombreSocio() {
+        return nombreSocio;
+    }
+
+    public void setNombreSocio(String nombreSocio) {
+        this.nombreSocio = nombreSocio;
+    }
+
+    public String getDniSocio() {
+        return dniSocio;
+    }
+
+    public void setDniSocio(String dniSocio) {
+        this.dniSocio = dniSocio;
     }
 
 }
