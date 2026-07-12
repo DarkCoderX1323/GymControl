@@ -15,14 +15,21 @@ public class Membresia {
     private String estado;
     private int tipoMembresiaId;
 
+    // Campos de solo lectura, poblados por MembresiaDAO al hacer JOIN con
+    // socio o al calcular días restantes. No son columnas propias de la
+    // tabla `membresia`.
+    private String nombreSocio;
+    private String dniSocio;
+    private long diasRestantes;
+
     public Membresia() {
     }
 
     public Membresia(int id, int socioId,
-                      String tipo,
-                      LocalDate fechaInicio,
-                      LocalDate fechaFin,
-                      String estado) {
+                     String tipo,
+                     LocalDate fechaInicio,
+                     LocalDate fechaFin,
+                     String estado) {
 
         this.id = id;
         this.socioId = socioId;
@@ -84,12 +91,36 @@ public class Membresia {
     public void setEstado(String estado) {
         this.estado = estado;
     }
-    
+
     public int getTipoMembresiaId() {
-    return tipoMembresiaId;
-}
+        return tipoMembresiaId;
+    }
 
     public void setTipoMembresiaId(int tipoMembresiaId) {
-    this.tipoMembresiaId = tipoMembresiaId;
+        this.tipoMembresiaId = tipoMembresiaId;
+    }
+
+    public String getNombreSocio() {
+        return nombreSocio;
+    }
+
+    public void setNombreSocio(String nombreSocio) {
+        this.nombreSocio = nombreSocio;
+    }
+
+    public String getDniSocio() {
+        return dniSocio;
+    }
+
+    public void setDniSocio(String dniSocio) {
+        this.dniSocio = dniSocio;
+    }
+
+    public long getDiasRestantes() {
+        return diasRestantes;
+    }
+
+    public void setDiasRestantes(long diasRestantes) {
+        this.diasRestantes = diasRestantes;
     }
 }

@@ -28,6 +28,7 @@ public class DashboardView extends JFrame {
     private JButton btnMembresias;
     private JButton btnPagos;
     private JButton btnAsistencia;
+    private JButton btnAlertas;
     private JButton btnReportes;
     private JButton btnCerrarSesion;
 
@@ -63,7 +64,9 @@ public class DashboardView extends JFrame {
         // DATOS REALES
         // =========================
 
-        new MembresiaDAO().actualizarMembresiasVencidas();
+        MembresiaDAO membresiaDAO = new MembresiaDAO();
+
+        membresiaDAO.actualizarMembresiasVencidas();
 
         int socios =
                 dashboardDAO.contarSociosActivos();
@@ -73,6 +76,9 @@ public class DashboardView extends JFrame {
 
         double ingresos =
                 dashboardDAO.totalPagosMes();
+
+        int porVencer =
+                membresiaDAO.contarMembresiasPorVencer(3);
 
         // =========================
         // PANEL PRINCIPAL
@@ -136,6 +142,7 @@ public class DashboardView extends JFrame {
         btnMembresias = crearItemMenu("Membresías");
         btnPagos = crearItemMenu("Pagos");
         btnAsistencia = crearItemMenu("Asistencia");
+        btnAlertas = crearItemMenu("Alertas");
         btnReportes = crearItemMenu("Reportes");
         btnCerrarSesion = crearItemMenu("Cerrar sesión");
 
@@ -184,6 +191,15 @@ public class DashboardView extends JFrame {
             new AsistenciaView();
 
         });
+        btnAlertas.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso al modulo Alertas de Membresias"
+            );
+
+            new AlertaMembresiaView();
+
+        });
         btnCerrarSesion.addActionListener(e -> {
 
             logger.info(
@@ -196,7 +212,7 @@ public class DashboardView extends JFrame {
 
         });
 
-        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnAsistencia, btnReportes}) {
+        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnAsistencia, btnAlertas, btnReportes}) {
             item.setAlignmentX(Component.LEFT_ALIGNMENT);
             item.setMaximumSize(new Dimension(240, 40));
             panelMenu.add(item);
@@ -254,7 +270,7 @@ public class DashboardView extends JFrame {
                 new JPanel(
                         new GridLayout(
                                 1,
-                                3,
+                                4,
                                 15,
                                 15
                         )
@@ -285,6 +301,33 @@ public class DashboardView extends JFrame {
                         Tema.ADVERTENCIA
                 )
         );
+
+        JPanel tarjetaPorVencer =
+                crearTarjeta(
+                        "Membresías por vencer (3 días)",
+                        String.valueOf(porVencer),
+                        porVencer > 0 ? Tema.PELIGRO : Tema.EXITO
+                );
+
+        tarjetaPorVencer.setCursor(
+                new Cursor(Cursor.HAND_CURSOR)
+        );
+
+        tarjetaPorVencer.addMouseListener(
+                new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
+
+                        logger.info(
+                                "Acceso al modulo Alertas de Membresias"
+                        );
+
+                        new AlertaMembresiaView();
+                    }
+                }
+        );
+
+        panelCards.add(tarjetaPorVencer);
 
         // =========================
         // ACCIONES RAPIDAS

@@ -112,6 +112,104 @@ public class MembresiaDAO {
         return lista;
     }
 
+    // =========================
+    // ALERTAS DE VENCIMIENTO
+    // =========================
+
+    /**
+     * Devuelve las membresías activas cuya fecha de fin cae dentro de los
+     * próximos `dias` (inclusive hoy), junto con los datos del socio, para
+     * las alertas de "por vencer".
+     */
+    public List<Membresia> obtenerMembresiasPorVencer(int dias) {
+
+        List<Membresia> lista = new ArrayList<>();
+
+        String sql =
+                "SELECT\n" +
+                        "    m.id,\n" +
+                        "    m.socio_id,\n" +
+                        "    m.tipo,\n" +
+                        "    m.fecha_inicio,\n" +
+                        "    m.fecha_fin,\n" +
+                        "    m.estado,\n" +
+                        "    m.tipo_membresia_id,\n" +
+                        "    s.nombre AS socio_nombre,\n" +
+                        "    s.dni AS socio_dni,\n" +
+                        "    DATEDIFF(m.fecha_fin, CURDATE()) AS dias_restantes\n" +
+                        "FROM membresia m\n" +
+                        "INNER JOIN socio s\n" +
+                        "    ON m.socio_id = s.id\n" +
+                        "WHERE m.estado = 'activa'\n" +
+                        "  AND m.fecha_fin BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)\n" +
+                        "ORDER BY m.fecha_fin ASC";
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, dias);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Membresia m = new Membresia();
+
+                    m.setId(rs.getInt("id"));
+                    m.setSocioId(rs.getInt("socio_id"));
+                    m.setTipo(rs.getString("tipo"));
+                    m.setFechaInicio(rs.getDate("fecha_inicio").toLocalDate());
+                    m.setFechaFin(rs.getDate("fecha_fin").toLocalDate());
+                    m.setEstado(rs.getString("estado"));
+                    m.setTipoMembresiaId(rs.getInt("tipo_membresia_id"));
+                    m.setNombreSocio(rs.getString("socio_nombre"));
+                    m.setDniSocio(rs.getString("socio_dni"));
+                    m.setDiasRestantes(rs.getLong("dias_restantes"));
+
+                    lista.add(m);
+                }
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
+    /**
+     * Cuenta cuántas membresías activas están por vencer dentro de los
+     * próximos `dias`. Usado para la tarjeta de alerta en el Dashboard.
+     */
+    public int contarMembresiasPorVencer(int dias) {
+
+        String sql =
+                "SELECT COUNT(*) total " +
+                        "FROM membresia " +
+                        "WHERE estado = 'activa' " +
+                        "  AND fecha_fin BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)";
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, dias);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getInt("total");
+                }
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
     public int actualizarMembresiasVencidas() {
 
         String sql =
