@@ -29,6 +29,13 @@ public class SocioView extends JFrame {
     private JButton btnVolver;
     private JButton btnBuscar;
 
+    // Filtros combinados de listado
+    private JTextField txtFiltroNombre;
+    private JTextField txtFiltroDni;
+    private JComboBox<String> cbFiltroEstado;
+    private JButton btnFiltrar;
+    private JButton btnQuitarFiltro;
+
     // Tabla
     private JTable tablaSocios;
     private DefaultTableModel modeloTabla;
@@ -325,8 +332,19 @@ public class SocioView extends JFrame {
                 BorderLayout.WEST
         );
 
+        // =========================
+        // BARRA DE FILTROS COMBINADOS
+        // =========================
+
+        JPanel panelFiltros = crearPanelFiltros();
+
+        JPanel panelTabla = new JPanel(new BorderLayout(0, 10));
+        panelTabla.setBackground(Tema.FONDO);
+        panelTabla.add(panelFiltros, BorderLayout.NORTH);
+        panelTabla.add(scrollPane, BorderLayout.CENTER);
+
         panelPrincipal.add(
-                scrollPane,
+                panelTabla,
                 BorderLayout.CENTER
         );
 
@@ -337,6 +355,93 @@ public class SocioView extends JFrame {
         // =========================
 
         cargarSocios();
+    }
+
+    /**
+     * Barra de filtros combinados (nombre + DNI + estado) sobre el listado
+     * de socios. Es independiente del formulario de registro/edición.
+     */
+    private JPanel crearPanelFiltros() {
+
+        JPanel panel = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 10)
+        );
+
+        panel.setBackground(Tema.SUPERFICIE);
+
+        panel.setBorder(
+                BorderFactory.createEmptyBorder(10, 14, 10, 14)
+        );
+
+        txtFiltroNombre = new JTextField(12);
+        estilizarCampoFiltro(txtFiltroNombre);
+        txtFiltroNombre.setToolTipText("Filtrar por nombre (parcial)");
+
+        txtFiltroDni = new JTextField(10);
+        estilizarCampoFiltro(txtFiltroDni);
+        txtFiltroDni.setToolTipText("Filtrar por DNI (parcial)");
+
+        cbFiltroEstado = new JComboBox<>(
+                new String[]{"Todos", "activo", "inactivo"}
+        );
+
+        cbFiltroEstado.setBackground(Tema.SUPERFICIE_CLARA);
+        cbFiltroEstado.setForeground(Tema.TEXTO_PRIMARIO);
+        cbFiltroEstado.setFont(Tema.fuenteRegular().deriveFont(13f));
+
+        btnFiltrar = new JButton("Filtrar");
+        estilizarBotonFiltro(btnFiltrar, Tema.ACENTO);
+
+        btnQuitarFiltro = new JButton("Quitar filtros");
+        estilizarBotonFiltro(btnQuitarFiltro, Tema.SUPERFICIE_CLARA);
+
+        btnFiltrar.addActionListener(e -> filtrarListado());
+
+        btnQuitarFiltro.addActionListener(e -> quitarFiltros());
+
+        panel.add(crearEtiquetaFiltro("Nombre"));
+        panel.add(txtFiltroNombre);
+
+        panel.add(crearEtiquetaFiltro("DNI"));
+        panel.add(txtFiltroDni);
+
+        panel.add(crearEtiquetaFiltro("Estado"));
+        panel.add(cbFiltroEstado);
+
+        panel.add(btnFiltrar);
+        panel.add(btnQuitarFiltro);
+
+        return panel;
+    }
+
+    private JLabel crearEtiquetaFiltro(String texto) {
+
+        JLabel label = new JLabel(texto);
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        return label;
+    }
+
+    private void estilizarCampoFiltro(JTextField campo) {
+
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setFont(Tema.fuenteRegular().deriveFont(13f));
+        campo.setBorder(
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        );
+    }
+
+    private void estilizarBotonFiltro(JButton boton, Color color) {
+
+        boton.setBackground(color);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setFont(Tema.fuenteBoton().deriveFont(13f));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     private JTextField crearCampo(
@@ -452,9 +557,18 @@ public class SocioView extends JFrame {
 
     private void cargarSocios() {
 
-        modeloTabla.setRowCount(0);
-
         List<Socio> listaSocios = socioDAO.obtenerSocios();
+
+        poblarTabla(listaSocios);
+    }
+
+    /**
+     * Vuelca una lista de socios en la tabla, sea el listado completo o el
+     * resultado de aplicar los filtros combinados.
+     */
+    private void poblarTabla(List<Socio> listaSocios) {
+
+        modeloTabla.setRowCount(0);
 
         for (Socio socio : listaSocios) {
 
@@ -470,6 +584,39 @@ public class SocioView extends JFrame {
 
             modeloTabla.addRow(fila);
         }
+    }
+
+    // =========================
+    // FILTROS COMBINADOS
+    // =========================
+
+    private void filtrarListado() {
+
+        String nombre = txtFiltroNombre.getText().trim();
+        String dni = txtFiltroDni.getText().trim();
+        String estado = (String) cbFiltroEstado.getSelectedItem();
+
+        List<Socio> listaFiltrada =
+                socioDAO.filtrarSocios(nombre, dni, estado);
+
+        poblarTabla(listaFiltrada);
+
+        if (listaFiltrada.isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se encontraron socios con esos filtros."
+            );
+        }
+    }
+
+    private void quitarFiltros() {
+
+        txtFiltroNombre.setText("");
+        txtFiltroDni.setText("");
+        cbFiltroEstado.setSelectedIndex(0);
+
+        cargarSocios();
     }
 
     private void seleccionarSocio() {
