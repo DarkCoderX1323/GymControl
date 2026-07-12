@@ -27,6 +27,7 @@ public class DashboardView extends JFrame {
     private JButton btnSocios;
     private JButton btnMembresias;
     private JButton btnPagos;
+    private JButton btnAsistencia;
     private JButton btnReportes;
     private JButton btnCerrarSesion;
 
@@ -134,6 +135,7 @@ public class DashboardView extends JFrame {
         btnSocios = crearItemMenu("Socios");
         btnMembresias = crearItemMenu("Membresías");
         btnPagos = crearItemMenu("Pagos");
+        btnAsistencia = crearItemMenu("Asistencia");
         btnReportes = crearItemMenu("Reportes");
         btnCerrarSesion = crearItemMenu("Cerrar sesión");
 
@@ -173,6 +175,15 @@ public class DashboardView extends JFrame {
             new ReporteView();
 
         });
+        btnAsistencia.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso al modulo Asistencia"
+            );
+
+            new AsistenciaView();
+
+        });
         btnCerrarSesion.addActionListener(e -> {
 
             logger.info(
@@ -185,7 +196,7 @@ public class DashboardView extends JFrame {
 
         });
 
-        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnReportes}) {
+        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnAsistencia, btnReportes}) {
             item.setAlignmentX(Component.LEFT_ALIGNMENT);
             item.setMaximumSize(new Dimension(240, 40));
             panelMenu.add(item);
