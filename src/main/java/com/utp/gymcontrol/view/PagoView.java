@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.time.LocalDate;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,6 +39,15 @@ public class PagoView extends JFrame {
     private JButton btnLimpiar;
     private JButton btnVolver;
     private JButton btnBuscarPago;
+
+    // Filtros combinados de listado
+    private JTextField txtFiltroSocioId;
+    private JComboBox<String> cbFiltroMetodo;
+    private JComboBox<String> cbFiltroTipo;
+    private JTextField txtFiltroDesde;
+    private JTextField txtFiltroHasta;
+    private JButton btnFiltrar;
+    private JButton btnQuitarFiltro;
 
     // =========================
     // TABLA
@@ -349,8 +359,19 @@ public class PagoView extends JFrame {
                 BorderLayout.WEST
         );
 
+        // =========================
+        // BARRA DE FILTROS COMBINADOS
+        // =========================
+
+        JPanel panelFiltros = crearPanelFiltros();
+
+        JPanel panelTabla = new JPanel(new BorderLayout(0, 10));
+        panelTabla.setBackground(Tema.FONDO);
+        panelTabla.add(panelFiltros, BorderLayout.NORTH);
+        panelTabla.add(scroll, BorderLayout.CENTER);
+
         panelPrincipal.add(
-                scroll,
+                panelTabla,
                 BorderLayout.CENTER
         );
 
@@ -358,6 +379,146 @@ public class PagoView extends JFrame {
 
         cargarPagos();
 
+    }
+
+    /**
+     * Barra de filtros combinados (socio + método de pago + rango de
+     * fechas) sobre el listado de pagos. Es independiente del formulario
+     * de registro/edición.
+     */
+    private JPanel crearPanelFiltros() {
+
+        JPanel panel = new JPanel();
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        panel.setBackground(Tema.SUPERFICIE);
+
+        panel.setBorder(
+                BorderFactory.createEmptyBorder(10, 14, 10, 14)
+        );
+
+        // =========================
+        // FILA 1: SOCIO, MÉTODO, TIPO
+        // =========================
+
+        JPanel filaCampos = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 5)
+        );
+
+        filaCampos.setBackground(Tema.SUPERFICIE);
+
+        txtFiltroSocioId = new JTextField(6);
+        estilizarCampoFiltro(txtFiltroSocioId);
+        txtFiltroSocioId.setToolTipText("Filtrar por ID de socio");
+
+        cbFiltroMetodo = new JComboBox<>(
+                new String[]{"Todos", "efectivo", "tarjeta", "yape", "plin"}
+        );
+
+        cbFiltroMetodo.setBackground(Tema.SUPERFICIE_CLARA);
+        cbFiltroMetodo.setForeground(Tema.TEXTO_PRIMARIO);
+        cbFiltroMetodo.setFont(Tema.fuenteRegular().deriveFont(13f));
+
+        cbFiltroTipo = new JComboBox<>(
+                new String[]{"Todos", "Mensual", "Trimestral", "Anual"}
+        );
+
+        cbFiltroTipo.setBackground(Tema.SUPERFICIE_CLARA);
+        cbFiltroTipo.setForeground(Tema.TEXTO_PRIMARIO);
+        cbFiltroTipo.setFont(Tema.fuenteRegular().deriveFont(13f));
+
+        filaCampos.add(crearEtiquetaFiltro("ID socio"));
+        filaCampos.add(txtFiltroSocioId);
+
+        filaCampos.add(crearEtiquetaFiltro("Método"));
+        filaCampos.add(cbFiltroMetodo);
+
+        filaCampos.add(crearEtiquetaFiltro("Tipo"));
+        filaCampos.add(cbFiltroTipo);
+
+        // =========================
+        // FILA 2: RANGO DE FECHAS
+        // =========================
+
+        JPanel filaFechas = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 5)
+        );
+
+        filaFechas.setBackground(Tema.SUPERFICIE);
+
+        txtFiltroDesde = new JTextField(10);
+        estilizarCampoFiltro(txtFiltroDesde);
+        txtFiltroDesde.setToolTipText("Fecha desde (AAAA-MM-DD)");
+
+        txtFiltroHasta = new JTextField(10);
+        estilizarCampoFiltro(txtFiltroHasta);
+        txtFiltroHasta.setToolTipText("Fecha hasta (AAAA-MM-DD)");
+
+        filaFechas.add(crearEtiquetaFiltro("Desde"));
+        filaFechas.add(txtFiltroDesde);
+
+        filaFechas.add(crearEtiquetaFiltro("Hasta"));
+        filaFechas.add(txtFiltroHasta);
+
+        // =========================
+        // FILA 3: BOTONES
+        // =========================
+
+        JPanel filaBotones = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 5)
+        );
+
+        filaBotones.setBackground(Tema.SUPERFICIE);
+
+        btnFiltrar = new JButton("Filtrar");
+        estilizarBotonFiltro(btnFiltrar, Tema.ACENTO);
+
+        btnQuitarFiltro = new JButton("Quitar filtros");
+        estilizarBotonFiltro(btnQuitarFiltro, Tema.SUPERFICIE_CLARA);
+
+        btnFiltrar.addActionListener(e -> filtrarListado());
+
+        btnQuitarFiltro.addActionListener(e -> quitarFiltros());
+
+        filaBotones.add(btnFiltrar);
+        filaBotones.add(btnQuitarFiltro);
+
+        panel.add(filaCampos);
+        panel.add(filaFechas);
+        panel.add(filaBotones);
+
+        return panel;
+    }
+
+    private JLabel crearEtiquetaFiltro(String texto) {
+
+        JLabel label = new JLabel(texto);
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        return label;
+    }
+
+    private void estilizarCampoFiltro(JTextField campo) {
+
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setFont(Tema.fuenteRegular().deriveFont(13f));
+        campo.setBorder(
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        );
+    }
+
+    private void estilizarBotonFiltro(JButton boton, Color color) {
+
+        boton.setBackground(color);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setFont(Tema.fuenteBoton().deriveFont(13f));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     // =========================
@@ -481,9 +642,18 @@ public class PagoView extends JFrame {
 
     private void cargarPagos() {
 
-        modeloTabla.setRowCount(0);
-
         List<Pago> listaPagos = pagoDAO.obtenerPagos();
+
+        poblarTabla(listaPagos);
+    }
+
+    /**
+     * Vuelca una lista de pagos en la tabla, sea el listado completo o el
+     * resultado de aplicar los filtros combinados.
+     */
+    private void poblarTabla(List<Pago> listaPagos) {
+
+        modeloTabla.setRowCount(0);
 
         for (Pago pago : listaPagos) {
 
@@ -503,6 +673,97 @@ public class PagoView extends JFrame {
 
         }
 
+    }
+
+    // =========================
+    // FILTROS COMBINADOS
+    // =========================
+
+    private void filtrarListado() {
+
+        Integer socioId = null;
+
+        String textoSocioId = txtFiltroSocioId.getText().trim();
+
+        if (StringUtils.isNotBlank(textoSocioId)) {
+
+            try {
+
+                socioId = Integer.parseInt(textoSocioId);
+
+            } catch (NumberFormatException e) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "El ID de socio debe ser un número."
+                );
+
+                return;
+            }
+        }
+
+        String metodo = (String) cbFiltroMetodo.getSelectedItem();
+        String tipo = (String) cbFiltroTipo.getSelectedItem();
+
+        LocalDate desde = null;
+        LocalDate hasta = null;
+
+        String textoDesde = txtFiltroDesde.getText().trim();
+        String textoHasta = txtFiltroHasta.getText().trim();
+
+        try {
+
+            if (StringUtils.isNotBlank(textoDesde)) {
+                desde = LocalDate.parse(textoDesde);
+            }
+
+            if (StringUtils.isNotBlank(textoHasta)) {
+                hasta = LocalDate.parse(textoHasta);
+            }
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Las fechas deben tener el formato AAAA-MM-DD."
+            );
+
+            return;
+        }
+
+        if (desde != null && hasta != null && hasta.isBefore(desde)) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "La fecha 'Hasta' no puede ser anterior a 'Desde'."
+            );
+
+            return;
+        }
+
+        List<Pago> listaFiltrada =
+                pagoDAO.filtrarPagos(socioId, metodo, tipo, desde, hasta);
+
+        poblarTabla(listaFiltrada);
+
+        if (listaFiltrada.isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se encontraron pagos con esos filtros."
+            );
+        }
+    }
+
+    private void quitarFiltros() {
+
+        txtFiltroSocioId.setText("");
+        cbFiltroMetodo.setSelectedIndex(0);
+        cbFiltroTipo.setSelectedIndex(0);
+        txtFiltroDesde.setText("");
+        txtFiltroHasta.setText("");
+
+        cargarPagos();
     }
 
     // =========================
