@@ -26,6 +26,13 @@ public class MembresiaView extends JFrame {
     private JButton btnRegistrar;
     private JButton btnVolver;
 
+    // Filtros combinados de listado
+    private JTextField txtFiltroSocioId;
+    private JComboBox<String> cbFiltroEstado;
+    private JComboBox<String> cbFiltroTipo;
+    private JButton btnFiltrar;
+    private JButton btnQuitarFiltro;
+
     private JTable tabla;
     private DefaultTableModel modelo;
 
@@ -198,7 +205,14 @@ public class MembresiaView extends JFrame {
         principal.add(formulario,
                 BorderLayout.NORTH);
 
-        principal.add(scroll,
+        JPanel panelFiltros = crearPanelFiltros();
+
+        JPanel panelTabla = new JPanel(new BorderLayout(0, 10));
+        panelTabla.setBackground(Tema.FONDO);
+        panelTabla.add(panelFiltros, BorderLayout.NORTH);
+        panelTabla.add(scroll, BorderLayout.CENTER);
+
+        principal.add(panelTabla,
                 BorderLayout.CENTER);
 
         add(principal);
@@ -278,6 +292,93 @@ public class MembresiaView extends JFrame {
         header.setBackground(Tema.SUPERFICIE_CLARA);
         header.setForeground(Tema.TEXTO_PRIMARIO);
         header.setFont(Tema.fuenteBoton().deriveFont(13f));
+    }
+
+    private JLabel crearEtiquetaFiltro(String texto) {
+
+        JLabel label = new JLabel(texto);
+        label.setForeground(Tema.TEXTO_SECUNDARIO);
+        label.setFont(Tema.fuenteEtiqueta());
+
+        return label;
+    }
+
+    private void estilizarCampoFiltro(JTextField campo) {
+
+        campo.setBackground(Tema.SUPERFICIE_CLARA);
+        campo.setForeground(Tema.TEXTO_PRIMARIO);
+        campo.setCaretColor(Tema.TEXTO_PRIMARIO);
+        campo.setFont(Tema.fuenteRegular().deriveFont(13f));
+        campo.setBorder(
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+        );
+    }
+
+    private void estilizarBotonFiltro(JButton boton, Color color) {
+
+        boton.setBackground(color);
+        boton.setForeground(Tema.TEXTO_PRIMARIO);
+        boton.setFocusPainted(false);
+        boton.setBorderPainted(false);
+        boton.setFont(Tema.fuenteBoton().deriveFont(13f));
+        boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    }
+
+    /**
+     * Barra de filtros combinados (socio + estado + tipo) sobre el
+     * listado de membresías. Es independiente del formulario de registro.
+     */
+    private JPanel crearPanelFiltros() {
+
+        JPanel panel = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 10, 10)
+        );
+
+        panel.setBackground(Tema.SUPERFICIE);
+
+        panel.setBorder(
+                BorderFactory.createEmptyBorder(10, 14, 10, 14)
+        );
+
+        txtFiltroSocioId = new JTextField(6);
+        estilizarCampoFiltro(txtFiltroSocioId);
+        txtFiltroSocioId.setToolTipText("Filtrar por ID de socio");
+
+        cbFiltroEstado = new JComboBox<>(
+                new String[]{"Todos", "activa", "vencida"}
+        );
+
+        estilizarCombo(cbFiltroEstado);
+
+        cbFiltroTipo = new JComboBox<>(
+                new String[]{"Todos", "Mensual", "Trimestral", "Anual"}
+        );
+
+        estilizarCombo(cbFiltroTipo);
+
+        btnFiltrar = new JButton("Filtrar");
+        estilizarBotonFiltro(btnFiltrar, Tema.ACENTO);
+
+        btnQuitarFiltro = new JButton("Quitar filtros");
+        estilizarBotonFiltro(btnQuitarFiltro, Tema.SUPERFICIE_CLARA);
+
+        btnFiltrar.addActionListener(e -> filtrarListado());
+
+        btnQuitarFiltro.addActionListener(e -> quitarFiltros());
+
+        panel.add(crearEtiquetaFiltro("ID socio"));
+        panel.add(txtFiltroSocioId);
+
+        panel.add(crearEtiquetaFiltro("Estado"));
+        panel.add(cbFiltroEstado);
+
+        panel.add(crearEtiquetaFiltro("Tipo"));
+        panel.add(cbFiltroTipo);
+
+        panel.add(btnFiltrar);
+        panel.add(btnQuitarFiltro);
+
+        return panel;
     }
 
     // =========================
@@ -453,25 +554,12 @@ public class MembresiaView extends JFrame {
 
         membresiaDAO.actualizarMembresiasVencidas();
 
-        modelo.setRowCount(0);
-
         try {
 
             List<Membresia> lista =
                     membresiaDAO.obtenerMembresias();
 
-            for (Membresia m : lista) {
-
-                modelo.addRow(new Object[]{
-
-                        m.getId(),
-                        m.getSocioId(),
-                        m.getTipo(),
-                        m.getFechaInicio(),
-                        m.getFechaFin(),
-                        m.getEstado()
-                });
-            }
+            poblarTabla(lista);
 
         } catch (Exception e) {
 
@@ -481,5 +569,80 @@ public class MembresiaView extends JFrame {
 
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Vuelca una lista de membresías en la tabla, sea el listado completo
+     * o el resultado de aplicar los filtros combinados.
+     */
+    private void poblarTabla(List<Membresia> lista) {
+
+        modelo.setRowCount(0);
+
+        for (Membresia m : lista) {
+
+            modelo.addRow(new Object[]{
+
+                    m.getId(),
+                    m.getSocioId(),
+                    m.getTipo(),
+                    m.getFechaInicio(),
+                    m.getFechaFin(),
+                    m.getEstado()
+            });
+        }
+    }
+
+    // =========================
+    // FILTROS COMBINADOS
+    // =========================
+
+    private void filtrarListado() {
+
+        Integer socioId = null;
+
+        String textoSocioId = txtFiltroSocioId.getText().trim();
+
+        if (!textoSocioId.isBlank()) {
+
+            try {
+
+                socioId = Integer.parseInt(textoSocioId);
+
+            } catch (NumberFormatException e) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "El ID de socio debe ser un número."
+                );
+
+                return;
+            }
+        }
+
+        String estado = (String) cbFiltroEstado.getSelectedItem();
+        String tipo = (String) cbFiltroTipo.getSelectedItem();
+
+        List<Membresia> listaFiltrada =
+                membresiaDAO.filtrarMembresias(socioId, estado, tipo);
+
+        poblarTabla(listaFiltrada);
+
+        if (listaFiltrada.isEmpty()) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se encontraron membresías con esos filtros."
+            );
+        }
+    }
+
+    private void quitarFiltros() {
+
+        txtFiltroSocioId.setText("");
+        cbFiltroEstado.setSelectedIndex(0);
+        cbFiltroTipo.setSelectedIndex(0);
+
+        cargarMembresias();
     }
 }

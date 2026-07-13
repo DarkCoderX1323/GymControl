@@ -113,6 +113,81 @@ public class MembresiaDAO {
     }
 
     // =========================
+    // FILTROS COMBINADOS
+    // =========================
+
+    /**
+     * Filtra membresías combinando socio, estado (activa/vencida) y tipo
+     * (Mensual/Trimestral/Anual). Cualquier parámetro puede venir null
+     * para omitir ese criterio.
+     */
+    public List<Membresia> filtrarMembresias(
+            Integer socioId,
+            String estado,
+            String tipo
+    ) {
+
+        List<Membresia> lista = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT * FROM membresia WHERE 1=1"
+        );
+
+        List<Object> parametros = new ArrayList<>();
+
+        if (socioId != null) {
+            sql.append(" AND socio_id = ?");
+            parametros.add(socioId);
+        }
+
+        if (estado != null && !estado.isBlank()
+                && !estado.equalsIgnoreCase("todos")) {
+            sql.append(" AND estado = ?");
+            parametros.add(estado.trim().toLowerCase());
+        }
+
+        if (tipo != null && !tipo.isBlank()
+                && !tipo.equalsIgnoreCase("todos")) {
+            sql.append(" AND tipo = ?");
+            parametros.add(tipo.trim());
+        }
+
+        sql.append(" ORDER BY fecha_fin DESC");
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < parametros.size(); i++) {
+                stmt.setObject(i + 1, parametros.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Membresia m = new Membresia();
+
+                    m.setId(rs.getInt("id"));
+                    m.setSocioId(rs.getInt("socio_id"));
+                    m.setTipo(rs.getString("tipo"));
+                    m.setFechaInicio(rs.getDate("fecha_inicio").toLocalDate());
+                    m.setFechaFin(rs.getDate("fecha_fin").toLocalDate());
+                    m.setEstado(rs.getString("estado"));
+                    m.setTipoMembresiaId(rs.getInt("tipo_membresia_id"));
+
+                    lista.add(m);
+                }
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+        }
+
+        return lista;
+    }
+
+    // =========================
     // ALERTAS DE VENCIMIENTO
     // =========================
 
