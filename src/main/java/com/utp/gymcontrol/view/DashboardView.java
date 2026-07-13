@@ -25,6 +25,7 @@ public class DashboardView extends JFrame {
     private DashboardDAO dashboardDAO;
 
     private JButton btnSocios;
+    private JButton btnRegistroRapido;
     private JButton btnMembresias;
     private JButton btnPagos;
     private JButton btnAsistencia;
@@ -139,12 +140,23 @@ public class DashboardView extends JFrame {
         // =========================
 
         btnSocios = crearItemMenu("Socios");
+        btnRegistroRapido = crearItemMenu("Registro rápido");
         btnMembresias = crearItemMenu("Membresías");
         btnPagos = crearItemMenu("Pagos");
         btnAsistencia = crearItemMenu("Asistencia");
         btnAlertas = crearItemMenu("Alertas");
         btnReportes = crearItemMenu("Reportes");
         btnCerrarSesion = crearItemMenu("Cerrar sesión");
+
+        btnRegistroRapido.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso al modulo Registro Rapido"
+            );
+
+            new RegistroRapidoView();
+
+        });
 
         btnSocios.addActionListener(e -> {
 
@@ -212,7 +224,7 @@ public class DashboardView extends JFrame {
 
         });
 
-        for (JButton item : new JButton[]{btnSocios, btnMembresias, btnPagos, btnAsistencia, btnAlertas, btnReportes}) {
+        for (JButton item : new JButton[]{btnRegistroRapido, btnSocios, btnMembresias, btnPagos, btnAsistencia, btnAlertas, btnReportes}) {
             item.setAlignmentX(Component.LEFT_ALIGNMENT);
             item.setMaximumSize(new Dimension(240, 40));
             panelMenu.add(item);
@@ -343,7 +355,7 @@ public class DashboardView extends JFrame {
         JPanel panelAcciones =
                 new JPanel(
                         new GridLayout(
-                                2,
+                                0,
                                 2,
                                 15,
                                 15
@@ -351,6 +363,23 @@ public class DashboardView extends JFrame {
                 );
 
         panelAcciones.setBackground(Tema.FONDO);
+
+        JButton btnAccionRegistroRapido =
+                crearBotonAccion("Registro rápido");
+
+        btnAccionRegistroRapido.setBackground(Tema.ACENTO);
+
+        btnAccionRegistroRapido.addActionListener(e -> {
+
+            logger.info(
+                    "Acceso rapido: Registro Rapido"
+            );
+
+            new RegistroRapidoView();
+
+        });
+
+        panelAcciones.add(btnAccionRegistroRapido);
 
         JButton btnNuevoSocio =
                 crearBotonAccion("Nuevo socio");
