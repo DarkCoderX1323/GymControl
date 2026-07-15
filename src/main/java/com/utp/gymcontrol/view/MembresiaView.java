@@ -1,10 +1,9 @@
 package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.MembresiaDAO;
-import com.utp.gymcontrol.dao.SocioDAO;
+import com.utp.gymcontrol.dao.PagoDAO;
 import com.utp.gymcontrol.dao.TipoMembresiaDAO;
 import com.utp.gymcontrol.model.Membresia;
-import com.utp.gymcontrol.model.Socio;
 import com.utp.gymcontrol.model.TipoMembresia;
 import com.utp.gymcontrol.utils.Tema;
 
@@ -15,19 +14,30 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Vista de administración de membresías: ver, filtrar, editar (cambiar
+ * tipo/fechas) y eliminar membresías ya existentes.
+ *
+ * A propósito, esta vista YA NO crea membresías nuevas: ese flujo vive en
+ * RegistroRapidoView, que registra socio + membresía + pago juntos en una
+ * sola transacción. Tener un "Registrar membresía" suelto acá (sin pago
+ * asociado) era redundante con Registro rápido y generaba confusión, así
+ * que se sacó — ver el hilo de conversación donde se decidió esto.
+ */
 public class MembresiaView extends JFrame {
 
-    private JComboBox<Socio> cbSocios;
+    private JLabel lblSocioValor;
     private JComboBox<TipoMembresia> cbTipos;
 
     private JTextField txtInicio;
     private JTextField txtFin;
 
-    private JButton btnRegistrar;
+    private JButton btnActualizar;
+    private JButton btnEliminar;
     private JButton btnVolver;
 
     // Filtros combinados de listado
-    private JTextField txtFiltroSocioId;
+    private JTextField txtFiltroNombre;
     private JComboBox<String> cbFiltroEstado;
     private JComboBox<String> cbFiltroTipo;
     private JButton btnFiltrar;
@@ -36,15 +46,27 @@ public class MembresiaView extends JFrame {
     private JTable tabla;
     private DefaultTableModel modelo;
 
+    // Guarda la última lista cargada (completa o filtrada) en el mismo
+    // orden que las filas de la tabla, para poder recuperar el objeto
+    // Membresia real al hacer click en una fila (sin tener que reparsear
+    // texto de celdas).
+    private List<Membresia> membresiasCargadas;
+
+    // null = no hay ninguna membresía seleccionada (formulario inactivo).
+    // no-null = el formulario está editando la membresía con ese id.
+    private Integer idEnEdicion;
+
+    private JLabel lblModoFormulario;
+
     private MembresiaDAO membresiaDAO;
-    private SocioDAO socioDAO;
     private TipoMembresiaDAO tipoDAO;
+    private PagoDAO pagoDAO;
 
     public MembresiaView() {
 
         membresiaDAO = new MembresiaDAO();
-        socioDAO = new SocioDAO();
         tipoDAO = new TipoMembresiaDAO();
+        pagoDAO = new PagoDAO();
 
         iniciarComponentes();
 
@@ -84,7 +106,7 @@ public class MembresiaView extends JFrame {
         principal.add(titulo, BorderLayout.NORTH);
 
         // =========================
-        // FORMULARIO
+        // FORMULARIO (editar / eliminar la membresía seleccionada)
         // =========================
 
         JPanel formulario =
@@ -98,11 +120,20 @@ public class MembresiaView extends JFrame {
                 )
         );
 
-        cbSocios = new JComboBox<>();
-        cbTipos = new JComboBox<>();
+        lblModoFormulario = new JLabel(
+                "Ningún registro seleccionado — hacé click en una fila de la tabla para editarla"
+        );
+        lblModoFormulario.setForeground(Tema.TEXTO_SECUNDARIO);
+        lblModoFormulario.setFont(Tema.fuenteEtiqueta().deriveFont(Font.BOLD, 13f));
+        lblModoFormulario.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
 
-        estilizarCombo(cbSocios);
+        lblSocioValor = new JLabel("—");
+        lblSocioValor.setForeground(Tema.TEXTO_PRIMARIO);
+        lblSocioValor.setFont(Tema.fuenteRegular().deriveFont(14f));
+
+        cbTipos = new JComboBox<>();
         estilizarCombo(cbTipos);
+        cbTipos.setEnabled(false);
 
         txtInicio = new JTextField();
         txtFin = new JTextField();
@@ -113,65 +144,84 @@ public class MembresiaView extends JFrame {
         estilizarCampo(txtInicio);
         estilizarCampo(txtFin);
 
-        btnRegistrar =
-                new JButton("Registrar membresía");
+        btnActualizar =
+                new JButton("Actualizar membresía");
 
-        estilizarBoton(btnRegistrar, Tema.ACENTO);
+        estilizarBoton(btnActualizar, Tema.EXITO);
+
+        btnEliminar =
+                new JButton("Eliminar membresía");
+
+        estilizarBoton(btnEliminar, Tema.PELIGRO);
 
         btnVolver = new JButton("Volver");
 
         estilizarBoton(btnVolver, Tema.SUPERFICIE_CLARA);
 
+        btnActualizar.setEnabled(false);
+        btnEliminar.setEnabled(false);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(6, 6, 6, 6);
+
+        // Fila 0: etiqueta de modo (sin selección / editando X), ocupa
+        // las dos columnas.
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1;
+        formulario.add(lblModoFormulario, gbc);
+        gbc.gridwidth = 1;
 
         // Columna izquierda: etiquetas (ancho fijo, no se estiran)
         // Columna derecha: campos/combos (ocupan el espacio restante)
         gbc.gridx = 0;
         gbc.weightx = 0;
 
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         formulario.add(crearEtiqueta("Socio"), gbc);
 
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         formulario.add(crearEtiqueta("Tipo de membresía"), gbc);
 
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         formulario.add(crearEtiqueta("Fecha inicio"), gbc);
 
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         formulario.add(crearEtiqueta("Fecha fin"), gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1;
 
-        gbc.gridy = 0;
-        formulario.add(cbSocios, gbc);
-
         gbc.gridy = 1;
-        formulario.add(cbTipos, gbc);
+        formulario.add(lblSocioValor, gbc);
 
         gbc.gridy = 2;
-        formulario.add(txtInicio, gbc);
+        formulario.add(cbTipos, gbc);
 
         gbc.gridy = 3;
+        formulario.add(txtInicio, gbc);
+
+        gbc.gridy = 4;
         formulario.add(txtFin, gbc);
 
         // Botones: compactos y centrados, en un sub-panel aparte para que
         // no hereden el ancho de las columnas del formulario
-        btnRegistrar.setPreferredSize(new Dimension(180, 36));
+        btnActualizar.setPreferredSize(new Dimension(190, 36));
+        btnEliminar.setPreferredSize(new Dimension(180, 36));
         btnVolver.setPreferredSize(new Dimension(110, 36));
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
         panelBotones.setOpaque(false);
-        panelBotones.add(btnRegistrar);
+        panelBotones.add(btnActualizar);
+        panelBotones.add(btnEliminar);
         panelBotones.add(btnVolver);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         gbc.gridwidth = 2;
         gbc.weightx = 0;
         gbc.insets = new Insets(16, 6, 6, 6);
@@ -196,6 +246,17 @@ public class MembresiaView extends JFrame {
 
         estilizarTabla(tabla);
 
+        tabla.setSelectionMode(
+                javax.swing.ListSelectionModel.SINGLE_SELECTION
+        );
+
+        tabla.getSelectionModel().addListSelectionListener(e -> {
+
+            if (!e.getValueIsAdjusting()) {
+                cargarSeleccionEnFormulario();
+            }
+        });
+
         JScrollPane scroll =
                 new JScrollPane(tabla);
 
@@ -217,11 +278,6 @@ public class MembresiaView extends JFrame {
 
         add(principal);
 
-        txtInicio.setText(
-                LocalDate.now().toString()
-        );
-
-        cargarSocios();
         cargarTipos();
         cargarMembresias();
 
@@ -229,9 +285,14 @@ public class MembresiaView extends JFrame {
                 e -> calcularFechaFin()
         );
 
-        btnRegistrar.addActionListener(
-                e -> registrarMembresia()
+        btnActualizar.addActionListener(
+                e -> actualizarMembresiaSeleccionada()
         );
+
+        btnEliminar.addActionListener(
+                e -> eliminarMembresiaSeleccionada()
+        );
+
         btnVolver.addActionListener(e -> {
 
             dispose();
@@ -325,8 +386,8 @@ public class MembresiaView extends JFrame {
     }
 
     /**
-     * Barra de filtros combinados (socio + estado + tipo) sobre el
-     * listado de membresías. Es independiente del formulario de registro.
+     * Barra de filtros combinados (nombre/DNI + estado + tipo) sobre el
+     * listado de membresías. Es independiente del formulario de edición.
      */
     private JPanel crearPanelFiltros() {
 
@@ -340,9 +401,9 @@ public class MembresiaView extends JFrame {
                 BorderFactory.createEmptyBorder(10, 14, 10, 14)
         );
 
-        txtFiltroSocioId = new JTextField(6);
-        estilizarCampoFiltro(txtFiltroSocioId);
-        txtFiltroSocioId.setToolTipText("Filtrar por ID de socio");
+        txtFiltroNombre = new JTextField(14);
+        estilizarCampoFiltro(txtFiltroNombre);
+        txtFiltroNombre.setToolTipText("Filtrar por nombre o DNI del socio");
 
         cbFiltroEstado = new JComboBox<>(
                 new String[]{"Todos", "activa", "vencida"}
@@ -366,8 +427,8 @@ public class MembresiaView extends JFrame {
 
         btnQuitarFiltro.addActionListener(e -> quitarFiltros());
 
-        panel.add(crearEtiquetaFiltro("ID socio"));
-        panel.add(txtFiltroSocioId);
+        panel.add(crearEtiquetaFiltro("Nombre o DNI"));
+        panel.add(txtFiltroNombre);
 
         panel.add(crearEtiquetaFiltro("Estado"));
         panel.add(cbFiltroEstado);
@@ -382,32 +443,8 @@ public class MembresiaView extends JFrame {
     }
 
     // =========================
-    // LOGICA (sin cambios)
+    // LOGICA
     // =========================
-
-    private void cargarSocios() {
-
-        cbSocios.removeAllItems();
-
-        try {
-
-            List<Socio> socios =
-                    socioDAO.obtenerSocios();
-
-            for (Socio s : socios) {
-
-                cbSocios.addItem(s);
-            }
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Error cargando socios"
-            );
-
-            e.printStackTrace();
-        }
-    }
 
     private void cargarTipos() {
 
@@ -435,6 +472,13 @@ public class MembresiaView extends JFrame {
 
     private void calcularFechaFin() {
 
+        // Mientras no haya ninguna membresía seleccionada, el combo de
+        // tipo está deshabilitado y no hay fecha de inicio real que usar
+        // como base — no hay nada que recalcular todavía.
+        if (idEnEdicion == null) {
+            return;
+        }
+
         try {
 
             TipoMembresia tipo =
@@ -445,8 +489,14 @@ public class MembresiaView extends JFrame {
                 return;
             }
 
+            // Usa la fecha de inicio real de la membresía seleccionada
+            // (no "hoy") como base, para que cambiar el tipo mientras se
+            // edita recalcule la fecha fin respetando cuándo empezó
+            // realmente esa membresía.
             LocalDate inicio =
-                    LocalDate.now();
+                    LocalDate.parse(
+                            txtInicio.getText().trim()
+                    );
 
             LocalDate fin =
                     inicio.plusDays(
@@ -463,79 +513,266 @@ public class MembresiaView extends JFrame {
         }
     }
 
-    private void registrarMembresia() {
+    /**
+     * Al hacer click en una fila de la tabla, carga esa membresía en el
+     * formulario para poder editarla o eliminarla: muestra el socio y la
+     * fecha de inicio real (de solo lectura), selecciona el tipo actual
+     * en el combo, y habilita los botones de Actualizar/Eliminar.
+     */
+    private void cargarSeleccionEnFormulario() {
+
+        int fila = tabla.getSelectedRow();
+
+        if (fila < 0 || membresiasCargadas == null
+                || fila >= membresiasCargadas.size()) {
+            return;
+        }
+
+        Membresia m = membresiasCargadas.get(fila);
+
+        String nombreMostrado =
+                m.getNombreSocio() != null
+                        ? m.getNombreSocio()
+                        + (m.getDniSocio() != null
+                        ? " - " + m.getDniSocio()
+                        : "")
+                        : ("socio #" + m.getSocioId());
+
+        lblSocioValor.setText(nombreMostrado);
+
+        cbTipos.setEnabled(true);
+        seleccionarTipoPorId(m.getTipoMembresiaId());
+
+        txtInicio.setText(
+                m.getFechaInicio().toString()
+        );
+
+        txtFin.setText(
+                m.getFechaFin().toString()
+        );
+
+        idEnEdicion = m.getId();
+
+        lblModoFormulario.setForeground(Tema.ACENTO);
+        lblModoFormulario.setText(
+                "Editando membresía de " + nombreMostrado
+                        + " (ID " + m.getId() + ")"
+        );
+
+        btnActualizar.setEnabled(true);
+        btnEliminar.setEnabled(true);
+    }
+
+    /**
+     * Vuelve el formulario a su estado inicial: sin ninguna membresía
+     * seleccionada, con los controles de edición deshabilitados.
+     */
+    private void limpiarFormulario() {
+
+        idEnEdicion = null;
+
+        lblSocioValor.setText("—");
+
+        cbTipos.setEnabled(false);
+        cbTipos.setSelectedIndex(-1);
+
+        txtInicio.setText("");
+        txtFin.setText("");
+
+        lblModoFormulario.setForeground(Tema.TEXTO_SECUNDARIO);
+        lblModoFormulario.setText(
+                "Ningún registro seleccionado — hacé click en una fila de la tabla para editarla"
+        );
+
+        btnActualizar.setEnabled(false);
+        btnEliminar.setEnabled(false);
+
+        tabla.clearSelection();
+    }
+
+    private void seleccionarTipoPorId(int id) {
+
+        for (int i = 0; i < cbTipos.getItemCount(); i++) {
+
+            TipoMembresia t = cbTipos.getItemAt(i);
+
+            if (t != null && t.getId() == id) {
+
+                cbTipos.setSelectedIndex(i);
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * Actualiza la membresía actualmente cargada en el formulario: nuevo
+     * tipo, fecha fin recalculada, y estado recalculado según esa fecha
+     * fin. Además, sincroniza el monto de los pagos ya asociados a esta
+     * membresía con el precio del nuevo tipo (para que Pagos no se quede
+     * mostrando el precio del tipo anterior).
+     */
+    private void actualizarMembresiaSeleccionada() {
+
+        if (idEnEdicion == null) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Seleccioná una membresía de la tabla primero."
+            );
+
+            return;
+        }
 
         try {
-
-            Socio socio =
-                    (Socio)
-                            cbSocios.getSelectedItem();
 
             TipoMembresia tipo =
                     (TipoMembresia)
                             cbTipos.getSelectedItem();
 
-            if (socio == null || tipo == null) {
+            if (tipo == null) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Seleccione un socio y un tipo."
+                        "Seleccione un tipo de membresía."
                 );
 
                 return;
             }
 
-            Membresia membresia =
-                    new Membresia();
-
-            membresia.setSocioId(
-                    socio.getId()
-            );
-
-            membresia.setTipo(
-                    tipo.getNombre()
-            );
-
-            membresia.setTipoMembresiaId(
-                    tipo.getId()
-            );
-
-            membresia.setFechaInicio(
+            LocalDate fechaInicio =
                     LocalDate.parse(
                             txtInicio.getText()
-                    )
-            );
+                    );
 
-            membresia.setFechaFin(
+            LocalDate fechaFin =
                     LocalDate.parse(
                             txtFin.getText()
-                    )
-            );
+                    );
 
-            membresia.setEstado(
-                    "activa"
-            );
+            // Si la nueva fecha fin ya pasó, la membresía queda vencida;
+            // si no, activa. Relevante al renovar una membresía vencida
+            // con un tipo nuevo.
+            String estado =
+                    fechaFin.isBefore(LocalDate.now())
+                            ? "vencida"
+                            : "activa";
 
-            boolean registrado =
-                    membresiaDAO
-                            .registrarMembresia(
-                                    membresia
-                            );
+            Membresia membresia = new Membresia();
 
-            if (registrado) {
+            membresia.setId(idEnEdicion);
+            membresia.setTipo(tipo.getNombre());
+            membresia.setTipoMembresiaId(tipo.getId());
+            membresia.setFechaInicio(fechaInicio);
+            membresia.setFechaFin(fechaFin);
+            membresia.setEstado(estado);
+
+            boolean actualizado =
+                    membresiaDAO.actualizarMembresia(membresia);
+
+            if (!actualizado) {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "Membresía registrada correctamente."
+                        "No se pudo actualizar la membresía."
                 );
 
-                cargarMembresias();
+                return;
+            }
+
+            // Sincroniza el monto del pago asociado con el precio del
+            // tipo vigente. No es crítico para la membresía en sí, así
+            // que si falla se avisa aparte pero no se revierte la
+            // actualización ya confirmada.
+            boolean montoSincronizado =
+                    pagoDAO.actualizarMontoPorMembresia(
+                            idEnEdicion,
+                            tipo.getPrecio()
+                    );
+
+            cargarMembresias();
+            limpiarFormulario();
+
+            if (montoSincronizado) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Membresía actualizada y monto de pago sincronizado correctamente."
+                );
 
             } else {
 
                 JOptionPane.showMessageDialog(
                         this,
-                        "No se pudo registrar."
+                        "Membresía actualizada, pero no se pudo sincronizar el monto del pago asociado."
+                );
+            }
+
+        } catch (Exception e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error: " + e.getMessage()
+            );
+
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Elimina la membresía actualmente cargada en el formulario, previa
+     * confirmación. Los pagos ya cobrados para esta membresía no se
+     * borran: quedan en el historial, solo se desvinculan (ver
+     * MembresiaDAO.eliminarMembresia).
+     */
+    private void eliminarMembresiaSeleccionada() {
+
+        if (idEnEdicion == null) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Seleccioná una membresía de la tabla primero."
+            );
+
+            return;
+        }
+
+        String nombreSocio = lblSocioValor.getText();
+
+        int confirmacion = JOptionPane.showConfirmDialog(
+                this,
+                "¿Eliminar la membresía de " + nombreSocio + "?\n"
+                        + "Los pagos ya registrados para esta membresía "
+                        + "no se eliminan, solo quedan sin membresía asociada.",
+                "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+
+        if (confirmacion != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try {
+
+            boolean eliminado =
+                    membresiaDAO.eliminarMembresia(idEnEdicion);
+
+            if (eliminado) {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Membresía eliminada correctamente."
+                );
+
+                cargarMembresias();
+                limpiarFormulario();
+
+            } else {
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        "No se pudo eliminar la membresía."
                 );
             }
 
@@ -573,18 +810,39 @@ public class MembresiaView extends JFrame {
 
     /**
      * Vuelca una lista de membresías en la tabla, sea el listado completo
-     * o el resultado de aplicar los filtros combinados.
+     * o el resultado de aplicar los filtros combinados. Guarda también la
+     * lista en membresiasCargadas, en el mismo orden que las filas, para
+     * poder recuperar el objeto real al seleccionar una fila (edición).
      */
     private void poblarTabla(List<Membresia> lista) {
+
+        membresiasCargadas = lista;
 
         modelo.setRowCount(0);
 
         for (Membresia m : lista) {
 
+            String socioMostrado;
+
+            if (m.getNombreSocio() != null) {
+
+                socioMostrado =
+                        m.getDniSocio() != null
+                                ? m.getNombreSocio() + " - " + m.getDniSocio()
+                                : m.getNombreSocio();
+
+            } else {
+
+                // Respaldo defensivo por si alguna consulta no trajera el
+                // JOIN con socio (no debería pasar con obtenerMembresias,
+                // filtrarMembresias ni filtrarMembresiasPorNombre actuales).
+                socioMostrado = "socio #" + m.getSocioId();
+            }
+
             modelo.addRow(new Object[]{
 
                     m.getId(),
-                    m.getSocioId(),
+                    socioMostrado,
                     m.getTipo(),
                     m.getFechaInicio(),
                     m.getFechaFin(),
@@ -599,34 +857,17 @@ public class MembresiaView extends JFrame {
 
     private void filtrarListado() {
 
-        Integer socioId = null;
-
-        String textoSocioId = txtFiltroSocioId.getText().trim();
-
-        if (!textoSocioId.isBlank()) {
-
-            try {
-
-                socioId = Integer.parseInt(textoSocioId);
-
-            } catch (NumberFormatException e) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "El ID de socio debe ser un número."
-                );
-
-                return;
-            }
-        }
+        String nombreODni = txtFiltroNombre.getText().trim();
 
         String estado = (String) cbFiltroEstado.getSelectedItem();
         String tipo = (String) cbFiltroTipo.getSelectedItem();
 
         List<Membresia> listaFiltrada =
-                membresiaDAO.filtrarMembresias(socioId, estado, tipo);
+                membresiaDAO.filtrarMembresiasPorNombre(nombreODni, estado, tipo);
 
         poblarTabla(listaFiltrada);
+
+        limpiarFormulario();
 
         if (listaFiltrada.isEmpty()) {
 
@@ -639,10 +880,11 @@ public class MembresiaView extends JFrame {
 
     private void quitarFiltros() {
 
-        txtFiltroSocioId.setText("");
+        txtFiltroNombre.setText("");
         cbFiltroEstado.setSelectedIndex(0);
         cbFiltroTipo.setSelectedIndex(0);
 
         cargarMembresias();
+        limpiarFormulario();
     }
 }

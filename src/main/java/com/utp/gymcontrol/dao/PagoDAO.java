@@ -452,4 +452,49 @@ public class PagoDAO {
 
     }
 
+    // =========================
+    // SINCRONIZACION CON MEMBRESIA
+    // =========================
+
+    /**
+     * Actualiza el monto de todos los pagos que están vinculados a una
+     * membresía (por membresia_id). Se usa cuando MembresiaView cambia el
+     * tipo de una membresía existente: el pago original debe reflejar el
+     * precio del nuevo tipo, no quedarse con el monto del tipo anterior.
+     */
+    public boolean actualizarMontoPorMembresia(
+            int membresiaId,
+            double nuevoMonto
+    ) {
+
+        String sql =
+                "UPDATE pago SET monto=? WHERE membresia_id=?";
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDouble(1, nuevoMonto);
+            stmt.setInt(2, membresiaId);
+
+            int filas = stmt.executeUpdate();
+
+            logger.info(
+                    "Monto sincronizado para membresia_id {} -> {} ({} pago(s))",
+                    membresiaId, nuevoMonto, filas
+            );
+
+            return true;
+
+        } catch (SQLException e) {
+
+            logger.error(
+                    "Error al sincronizar monto de pago con la membresía.",
+                    e
+            );
+
+            return false;
+
+        }
+    }
+
 }
