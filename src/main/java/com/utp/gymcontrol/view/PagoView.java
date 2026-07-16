@@ -1,8 +1,8 @@
 package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.PagoDAO;
-import com.utp.gymcontrol.utils.DashboardManager;
 import com.utp.gymcontrol.model.Pago;
+import com.utp.gymcontrol.utils.DashboardManager;
 import com.utp.gymcontrol.utils.Tema;
 
 import javax.swing.*;
@@ -42,7 +42,7 @@ public class PagoView extends JFrame {
     private JButton btnBuscarPago;
 
     // Filtros combinados de listado
-    private JTextField txtFiltroSocioId;
+    private JTextField txtFiltroNombre;
     private JComboBox<String> cbFiltroMetodo;
     private JComboBox<String> cbFiltroTipo;
     private JTextField txtFiltroDesde;
@@ -56,6 +56,13 @@ public class PagoView extends JFrame {
 
     private JTable tablaPagos;
     private DefaultTableModel modeloTabla;
+
+    // Guarda la última lista cargada (completa o filtrada) en el mismo
+    // orden que las filas de la tabla, para poder recuperar los datos
+    // reales (socio_id numérico, descripción original, etc.) al
+    // seleccionar una fila, en vez de reparsear el texto ya mostrado en
+    // pantalla (que ahora incluye nombres en vez de IDs).
+    private List<Pago> pagosCargados;
 
     public PagoView() {
 
@@ -140,13 +147,13 @@ public class PagoView extends JFrame {
         // de mostrar scroll si no entra en la ventana.
 
         // =========================
-        // BUSCAR POR ID
+        // BUSCAR POR NOMBRE DE SOCIO
         // =========================
 
         txtBuscarId =
                 crearCampo(
                         panelFormulario,
-                        "Buscar por ID pago",
+                        "Buscar por nombre de socio",
                         fuente
                 );
 
@@ -157,7 +164,7 @@ public class PagoView extends JFrame {
                 );
 
         btnBuscarPago.addActionListener(
-                e -> buscarPagoPorId()
+                e -> buscarPagosPorSocio()
         );
 
         panelFormulario.add(btnBuscarPago);
@@ -409,9 +416,9 @@ public class PagoView extends JFrame {
 
         filaCampos.setBackground(Tema.SUPERFICIE);
 
-        txtFiltroSocioId = new JTextField(6);
-        estilizarCampoFiltro(txtFiltroSocioId);
-        txtFiltroSocioId.setToolTipText("Filtrar por ID de socio");
+        txtFiltroNombre = new JTextField(14);
+        estilizarCampoFiltro(txtFiltroNombre);
+        txtFiltroNombre.setToolTipText("Filtrar por nombre o DNI del socio");
 
         cbFiltroMetodo = new JComboBox<>(
                 new String[]{"Todos", "efectivo", "tarjeta", "yape", "plin"}
@@ -429,8 +436,8 @@ public class PagoView extends JFrame {
         cbFiltroTipo.setForeground(Tema.TEXTO_PRIMARIO);
         cbFiltroTipo.setFont(Tema.fuenteRegular().deriveFont(13f));
 
-        filaCampos.add(crearEtiquetaFiltro("ID socio"));
-        filaCampos.add(txtFiltroSocioId);
+        filaCampos.add(crearEtiquetaFiltro("Nombre o DNI"));
+        filaCampos.add(txtFiltroNombre);
 
         filaCampos.add(crearEtiquetaFiltro("Método"));
         filaCampos.add(cbFiltroMetodo);
@@ -650,22 +657,44 @@ public class PagoView extends JFrame {
 
     /**
      * Vuelca una lista de pagos en la tabla, sea el listado completo o el
-     * resultado de aplicar los filtros combinados.
+     * resultado de aplicar los filtros combinados. Guarda también la
+     * lista en pagosCargados, en el mismo orden que las filas, para poder
+     * recuperar el objeto real al seleccionar una fila.
      */
     private void poblarTabla(List<Pago> listaPagos) {
+
+        pagosCargados = listaPagos;
 
         modeloTabla.setRowCount(0);
 
         for (Pago pago : listaPagos) {
 
+            String socioMostrado;
+
+            if (pago.getNombreSocio() != null) {
+
+                socioMostrado =
+                        pago.getDniSocio() != null
+                                ? pago.getNombreSocio() + " - " + pago.getDniSocio()
+                                : pago.getNombreSocio();
+
+            } else {
+
+                // Respaldo defensivo por si alguna consulta no trajera el
+                // JOIN con socio.
+                socioMostrado = "socio #" + pago.getSocioId();
+            }
+
+            String descripcionMostrada = descripcionParaMostrar(pago);
+
             Object[] fila = {
 
                     pago.getId(),
-                    pago.getSocioId(),
+                    socioMostrado,
                     pago.getMonto(),
                     pago.getMetodoPago(),
                     pago.getFechaPago(),
-                    pago.getDescripcion(),
+                    descripcionMostrada,
                     pago.getMembresiaId()
 
             };
@@ -676,32 +705,34 @@ public class PagoView extends JFrame {
 
     }
 
+    /**
+     * Descripción "amigable" del pago: si tiene una membresía asociada,
+     * muestra el tipo elegido al registrarla (por ejemplo "Membresía
+     * Mensual"), en vez de depender de texto libre escrito a mano. Si el
+     * pago quedó sin membresía asociada (por ejemplo, porque se eliminó
+     * esa membresía desde MembresiaView), cae de vuelta a la descripción
+     * originalmente guardada.
+     */
+    private String descripcionParaMostrar(Pago pago) {
+
+        if (pago.getTipoMembresia() != null
+                && !pago.getTipoMembresia().isBlank()) {
+
+            return "Membresía " + pago.getTipoMembresia();
+        }
+
+        return pago.getDescripcion() != null
+                ? pago.getDescripcion()
+                : "";
+    }
+
     // =========================
     // FILTROS COMBINADOS
     // =========================
 
     private void filtrarListado() {
 
-        Integer socioId = null;
-
-        String textoSocioId = txtFiltroSocioId.getText().trim();
-
-        if (StringUtils.isNotBlank(textoSocioId)) {
-
-            try {
-
-                socioId = Integer.parseInt(textoSocioId);
-
-            } catch (NumberFormatException e) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "El ID de socio debe ser un número."
-                );
-
-                return;
-            }
-        }
+        String nombreODni = txtFiltroNombre.getText().trim();
 
         String metodo = (String) cbFiltroMetodo.getSelectedItem();
         String tipo = (String) cbFiltroTipo.getSelectedItem();
@@ -743,7 +774,7 @@ public class PagoView extends JFrame {
         }
 
         List<Pago> listaFiltrada =
-                pagoDAO.filtrarPagos(socioId, metodo, tipo, desde, hasta);
+                pagoDAO.filtrarPagosPorNombre(nombreODni, metodo, tipo, desde, hasta);
 
         poblarTabla(listaFiltrada);
 
@@ -758,7 +789,7 @@ public class PagoView extends JFrame {
 
     private void quitarFiltros() {
 
-        txtFiltroSocioId.setText("");
+        txtFiltroNombre.setText("");
         cbFiltroMetodo.setSelectedIndex(0);
         cbFiltroTipo.setSelectedIndex(0);
         txtFiltroDesde.setText("");
@@ -775,37 +806,47 @@ public class PagoView extends JFrame {
 
         int fila = tablaPagos.getSelectedRow();
 
-        if (fila != -1) {
-
-            txtSocioId.setText(
-                    modeloTabla.getValueAt(fila, 1).toString()
-            );
-
-            txtMonto.setText(
-                    modeloTabla.getValueAt(fila, 2).toString()
-            );
-
-            txtMetodoPago.setText(
-                    modeloTabla.getValueAt(fila, 3).toString()
-            );
-
-            txtDescripcion.setText(
-                    modeloTabla.getValueAt(fila, 5).toString()
-            );
-
-            txtMembresiaId.setText(
-                    modeloTabla.getValueAt(fila, 6).toString()
-            );
-
+        if (fila < 0 || pagosCargados == null
+                || fila >= pagosCargados.size()) {
+            return;
         }
+
+        Pago pago = pagosCargados.get(fila);
+
+        txtSocioId.setText(
+                String.valueOf(pago.getSocioId())
+        );
+
+        txtMonto.setText(
+                String.valueOf(pago.getMonto())
+        );
+
+        txtMetodoPago.setText(
+                pago.getMetodoPago()
+        );
+
+        txtDescripcion.setText(
+                descripcionParaMostrar(pago)
+        );
+
+        txtMembresiaId.setText(
+                String.valueOf(pago.getMembresiaId())
+        );
 
     }
 
     // =========================
-    // BUSCAR POR ID
+    // BUSCAR POR NOMBRE DE SOCIO
     // =========================
 
-    private void buscarPagoPorId() {
+    /**
+     * Reemplaza la búsqueda original por ID de pago: ahora busca por
+     * nombre o DNI del socio y filtra la tabla con esos resultados (igual
+     * que el filtro de nombre de la barra combinada), en vez de cargar un
+     * único pago en el formulario -- un socio puede tener varios pagos,
+     * así que no hay un único registro "correcto" para precargar.
+     */
+    private void buscarPagosPorSocio() {
 
         String texto = txtBuscarId.getText().trim();
 
@@ -813,62 +854,24 @@ public class PagoView extends JFrame {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Ingrese un ID de pago para buscar."
+                    "Ingrese un nombre o DNI de socio para buscar."
             );
 
             return;
         }
 
-        int id;
+        List<Pago> resultado =
+                pagoDAO.filtrarPagosPorNombre(
+                        texto, null, null, null, null
+                );
 
-        try {
+        poblarTabla(resultado);
 
-            id = Integer.parseInt(texto);
-
-        } catch (NumberFormatException e) {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "El ID debe ser un número."
-            );
-
-            return;
-        }
-
-        Pago pago = pagoDAO.buscarPago(id);
-
-        if (pago != null) {
-
-            txtSocioId.setText(
-                    String.valueOf(pago.getSocioId())
-            );
-
-            txtMonto.setText(
-                    String.valueOf(pago.getMonto())
-            );
-
-            txtMetodoPago.setText(
-                    pago.getMetodoPago()
-            );
-
-            txtDescripcion.setText(
-                    pago.getDescripcion()
-            );
-
-            txtMembresiaId.setText(
-                    String.valueOf(pago.getMembresiaId())
-            );
+        if (resultado.isEmpty()) {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Pago encontrado (ID " + pago.getId() + ")."
-            );
-
-        } else {
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "No se encontró ningún pago con ese ID."
+                    "No se encontraron pagos para ese socio."
             );
         }
     }
@@ -917,7 +920,7 @@ public class PagoView extends JFrame {
                 pagoDAO.registrarPago(pago);
 
         if (registrado) {
-            
+
             DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(
@@ -1003,7 +1006,7 @@ public class PagoView extends JFrame {
                 pagoDAO.actualizarPago(pago);
 
         if (actualizado) {
-            
+
             DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(
@@ -1076,7 +1079,7 @@ public class PagoView extends JFrame {
                 pagoDAO.eliminarPago(id);
 
         if (eliminado) {
-            
+
             DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(

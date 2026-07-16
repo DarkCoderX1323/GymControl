@@ -15,6 +15,14 @@ public class Pago {
     private String descripcion;
     private int membresiaId;
 
+    // Campos de solo lectura, poblados por consultas con JOIN
+    // (obtenerPagos/filtrarPagos/filtrarPagosPorNombre) para mostrar
+    // nombre de socio y tipo de membresía sin tener que hacer consultas
+    // adicionales desde la vista.
+    private String nombreSocio;
+    private String dniSocio;
+    private String tipoMembresia;
+
     public Pago() {
     }
 
@@ -85,10 +93,34 @@ public class Pago {
         this.descripcion = descripcion;
     }
     public int getMembresiaId() {
-    return membresiaId;
-}
+        return membresiaId;
+    }
 
-public void setMembresiaId(int membresiaId) {
-    this.membresiaId = membresiaId;
-}
+    public void setMembresiaId(int membresiaId) {
+        this.membresiaId = membresiaId;
+    }
+
+    public String getNombreSocio() {
+        return nombreSocio;
+    }
+
+    public void setNombreSocio(String nombreSocio) {
+        this.nombreSocio = nombreSocio;
+    }
+
+    public String getDniSocio() {
+        return dniSocio;
+    }
+
+    public void setDniSocio(String dniSocio) {
+        this.dniSocio = dniSocio;
+    }
+
+    public String getTipoMembresia() {
+        return tipoMembresia;
+    }
+
+    public void setTipoMembresia(String tipoMembresia) {
+        this.tipoMembresia = tipoMembresia;
+    }
 }

@@ -166,7 +166,7 @@ public class ExcelReportGenerator {
                     .setCellValue("ID");
 
             header.createCell(1)
-                    .setCellValue("ID Socio");
+                    .setCellValue("Socio");
 
             header.createCell(2)
                     .setCellValue("Tipo");
@@ -194,9 +194,17 @@ public class ExcelReportGenerator {
                                 membresia.getId()
                         );
 
+                String socioMostrado =
+                        membresia.getNombreSocio() != null
+                                ? membresia.getNombreSocio()
+                                + (membresia.getDniSocio() != null
+                                ? " - " + membresia.getDniSocio()
+                                : "")
+                                : "socio #" + membresia.getSocioId();
+
                 row.createCell(1)
                         .setCellValue(
-                                membresia.getSocioId()
+                                socioMostrado
                         );
 
                 row.createCell(2)
@@ -287,7 +295,7 @@ public class ExcelReportGenerator {
                     .setCellValue("ID");
 
             header.createCell(1)
-                    .setCellValue("ID Socio");
+                    .setCellValue("Socio");
 
             header.createCell(2)
                     .setCellValue("Monto");
@@ -333,9 +341,17 @@ public class ExcelReportGenerator {
                                 pago.getId()
                         );
 
+                String socioMostrado =
+                        pago.getNombreSocio() != null
+                                ? pago.getNombreSocio()
+                                + (pago.getDniSocio() != null
+                                ? " - " + pago.getDniSocio()
+                                : "")
+                                : "socio #" + pago.getSocioId();
+
                 row.createCell(1)
                         .setCellValue(
-                                pago.getSocioId()
+                                socioMostrado
                         );
 
                 row.createCell(2)
@@ -353,11 +369,22 @@ public class ExcelReportGenerator {
                                 pago.getFechaPago().toString()
                         );
 
+                // Muestra el tipo de membresía elegido al registrar el
+                // pago (por ejemplo "Membresía Mensual") en vez de
+                // depender de la descripción libre guardada; si el pago
+                // quedó sin membresía asociada, cae de vuelta al texto
+                // original.
+                String descripcionMostrada =
+                        pago.getTipoMembresia() != null
+                                && !pago.getTipoMembresia().isBlank()
+                                ? "Membresía " + pago.getTipoMembresia()
+                                : (pago.getDescripcion() != null
+                                ? pago.getDescripcion()
+                                : "");
+
                 row.createCell(5)
                         .setCellValue(
-                                pago.getDescripcion() != null
-                                        ? pago.getDescripcion()
-                                        : ""
+                                descripcionMostrada
                         );
 
                 row.createCell(6)
