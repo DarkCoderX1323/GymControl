@@ -608,13 +608,32 @@ public class PagoDAO {
      * tipo de una membresía existente: el pago original debe reflejar el
      * precio del nuevo tipo, no quedarse con el monto del tipo anterior.
      */
+    /**
+     * Actualiza el monto de todos los pagos que están vinculados a una
+     * membresía (por membresia_id). Se usa cuando MembresiaView cambia el
+     * tipo de una membresía existente: el pago original debe reflejar el
+     * precio del nuevo tipo, no quedarse con el monto del tipo anterior.
+     *
+     * @param esRenovacion si es true (la membresía estaba vencida y se
+     *                     está renovando desde hoy), además actualiza
+     *                     fecha_pago a ahora -- si no, ese pago sigue
+     *                     fechado en el mes en que se cobró originalmente
+     *                     y "Ingresos del mes" del Dashboard nunca lo
+     *                     cuenta, aunque el monto ya haya cambiado. Si es
+     *                     false (solo se corrigió el tipo de una
+     *                     membresía activa, sin que eso implique un cobro
+     *                     nuevo), la fecha del pago no se toca.
+     */
     public boolean actualizarMontoPorMembresia(
             int membresiaId,
-            double nuevoMonto
+            double nuevoMonto,
+            boolean esRenovacion
     ) {
 
         String sql =
-                "UPDATE pago SET monto=? WHERE membresia_id=?";
+                esRenovacion
+                        ? "UPDATE pago SET monto=?, fecha_pago=NOW() WHERE membresia_id=?"
+                        : "UPDATE pago SET monto=? WHERE membresia_id=?";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -625,8 +644,8 @@ public class PagoDAO {
             int filas = stmt.executeUpdate();
 
             logger.info(
-                    "Monto sincronizado para membresia_id {} -> {} ({} pago(s))",
-                    membresiaId, nuevoMonto, filas
+                    "Monto sincronizado para membresia_id {} -> {} ({} pago(s)), fecha_pago actualizada: {}",
+                    membresiaId, nuevoMonto, filas, esRenovacion
             );
 
             return true;
