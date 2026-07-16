@@ -1,6 +1,7 @@
 package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.PagoDAO;
+import com.utp.gymcontrol.utils.DashboardManager;
 import com.utp.gymcontrol.model.Pago;
 import com.utp.gymcontrol.utils.Tema;
 
@@ -916,6 +917,8 @@ public class PagoView extends JFrame {
                 pagoDAO.registrarPago(pago);
 
         if (registrado) {
+            
+            DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(
                     this,
@@ -1000,6 +1003,8 @@ public class PagoView extends JFrame {
                 pagoDAO.actualizarPago(pago);
 
         if (actualizado) {
+            
+            DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(
                     this,
@@ -1071,6 +1076,8 @@ public class PagoView extends JFrame {
                 pagoDAO.eliminarPago(id);
 
         if (eliminado) {
+            
+            DashboardManager.actualizar();
 
             JOptionPane.showMessageDialog(
 

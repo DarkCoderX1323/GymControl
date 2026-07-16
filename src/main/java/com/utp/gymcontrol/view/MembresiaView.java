@@ -1,5 +1,6 @@
 package com.utp.gymcontrol.view;
 
+import com.utp.gymcontrol.utils.DashboardManager;
 import com.utp.gymcontrol.dao.MembresiaDAO;
 import com.utp.gymcontrol.dao.PagoDAO;
 import com.utp.gymcontrol.dao.TipoMembresiaDAO;
@@ -692,6 +693,7 @@ public class MembresiaView extends JFrame {
 
             cargarMembresias();
             limpiarFormulario();
+            DashboardManager.actualizar();
 
             if (montoSincronizado) {
 
@@ -764,7 +766,7 @@ public class MembresiaView extends JFrame {
                         this,
                         "Membresía eliminada correctamente."
                 );
-
+                DashboardManager.actualizar();
                 cargarMembresias();
                 limpiarFormulario();
 

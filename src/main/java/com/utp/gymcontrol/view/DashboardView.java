@@ -12,6 +12,7 @@ import com.utp.gymcontrol.utils.ExcelReportGenerator;
 import com.utp.gymcontrol.utils.DashboardUtils;
 import com.utp.gymcontrol.utils.Tema;
 import com.utp.gymcontrol.utils.PanelRedondeado;
+import com.utp.gymcontrol.utils.DashboardManager;
 
 public class DashboardView extends JFrame {
 
@@ -32,6 +33,10 @@ public class DashboardView extends JFrame {
     private JButton btnAlertas;
     private JButton btnReportes;
     private JButton btnCerrarSesion;
+    private JLabel lblSocios;
+    private JLabel lblMembresias;
+    private JLabel lblIngresos;
+    private JLabel lblPorVencer;
 
     public DashboardView() {
 
@@ -46,6 +51,8 @@ public class DashboardView extends JFrame {
         );
 
         iniciarComponentes();
+        
+        DashboardManager.registrar(this);
 
         setTitle("GymControl - Dashboard");
 
@@ -55,7 +62,22 @@ public class DashboardView extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        setVisible(true);
+addWindowListener(
+        new java.awt.event.WindowAdapter() {
+
+            @Override
+            public void windowClosing(
+                    java.awt.event.WindowEvent e
+            ) {
+
+                DashboardManager.limpiar();
+
+            }
+
+        }
+);
+
+setVisible(true);
     }
 
 
@@ -290,36 +312,54 @@ public class DashboardView extends JFrame {
 
         panelCards.setBackground(Tema.FONDO);
 
-        panelCards.add(
-                crearTarjeta(
-                        "Socios activos",
-                        String.valueOf(socios),
-                        Tema.ACENTO
-                )
-        );
+        lblSocios = new JLabel(
+        String.valueOf(socios)
+);
 
-        panelCards.add(
-                crearTarjeta(
-                        "Membresías activas",
-                        String.valueOf(membresias),
-                        Tema.EXITO
-                )
-        );
+panelCards.add(
+        crearTarjeta(
+                "Socios activos",
+                lblSocios,
+                Tema.ACENTO
+        )
+);
 
-        panelCards.add(
-                crearTarjeta(
-                        "Ingresos del mes",
-                        String.format("S/ %.2f", ingresos),
-                        Tema.ADVERTENCIA
-                )
-        );
+        lblMembresias = new JLabel(
+        String.valueOf(membresias)
+);
 
-        JPanel tarjetaPorVencer =
-                crearTarjeta(
-                        "Membresías por vencer (3 días)",
-                        String.valueOf(porVencer),
-                        porVencer > 0 ? Tema.PELIGRO : Tema.EXITO
-                );
+panelCards.add(
+        crearTarjeta(
+                "Membresías activas",
+                lblMembresias,
+                Tema.EXITO
+        )
+);
+
+        lblIngresos = new JLabel(
+        String.format("S/ %.2f", ingresos)
+);
+
+panelCards.add(
+        crearTarjeta(
+                "Ingresos del mes",
+                lblIngresos,
+                Tema.ADVERTENCIA
+        )
+);
+
+        lblPorVencer = new JLabel(
+        String.valueOf(porVencer)
+);
+
+JPanel tarjetaPorVencer =
+        crearTarjeta(
+                "Membresías por vencer (3 días)",
+                lblPorVencer,
+                porVencer > 0
+                        ? Tema.PELIGRO
+                        : Tema.EXITO
+        );
 
         tarjetaPorVencer.setCursor(
                 new Cursor(Cursor.HAND_CURSOR)
@@ -576,55 +616,109 @@ public class DashboardView extends JFrame {
      * relleno sólido tipo "banner" que tenía el diseño anterior.
      */
     private JPanel crearTarjeta(
-            String titulo,
-            String valor,
-            Color colorAcento
-    ) {
+        String titulo,
+        JLabel lblValor,
+        Color colorAcento
+) {
 
-        JPanel tarjeta = new JPanel(new BorderLayout());
+    JPanel tarjeta = new JPanel(new BorderLayout());
 
-        tarjeta.setBackground(Tema.SUPERFICIE);
+tarjeta.setBackground(Tema.SUPERFICIE);
 
-        tarjeta.setBorder(
-                BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(
-                                0, 4, 0, 0, colorAcento
-                        ),
-                        BorderFactory.createEmptyBorder(16, 14, 16, 16)
+tarjeta.setBorder(
+        BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(
+                        0,
+                        4,
+                        0,
+                        0,
+                        colorAcento
+                ),
+                BorderFactory.createEmptyBorder(
+                        16,
+                        14,
+                        16,
+                        16
                 )
-        );
+        )
+);
 
-        JLabel lblTitulo =
-                new JLabel(titulo);
+    JLabel lblTitulo =
+        new JLabel(titulo);
 
-        lblTitulo.setForeground(Tema.TEXTO_SECUNDARIO);
-        lblTitulo.setFont(Tema.fuenteEtiqueta());
+lblTitulo.setForeground(Tema.TEXTO_SECUNDARIO);
 
-        JLabel lblValor =
-                new JLabel(valor);
+lblTitulo.setFont(Tema.fuenteEtiqueta());
 
-        lblValor.setForeground(Tema.TEXTO_PRIMARIO);
+lblValor.setForeground(Tema.TEXTO_PRIMARIO);
 
-        lblValor.setFont(
-                Tema.fuenteTitulo().deriveFont(24f)
-        );
+lblValor.setFont(
+        Tema.fuenteTitulo().deriveFont(24f)
+);
 
-        lblValor.setBorder(
-                BorderFactory.createEmptyBorder(6, 0, 0, 0)
-        );
+lblValor.setBorder(
+        BorderFactory.createEmptyBorder(
+                6,
+                0,
+                0,
+                0
+        )
+);
 
-        tarjeta.add(
-                lblTitulo,
-                BorderLayout.NORTH
-        );
+tarjeta.add(
+        lblTitulo,
+        BorderLayout.NORTH
+);
 
-        tarjeta.add(
-                lblValor,
-                BorderLayout.CENTER
-        );
+tarjeta.add(
+        lblValor,
+        BorderLayout.CENTER
+);
 
-        return tarjeta;
+return tarjeta;
     }
+    /**
+ * Actualiza las métricas del Dashboard sin reconstruir la ventana.
+ */
+public void actualizarDashboard() {
+
+    MembresiaDAO membresiaDAO = new MembresiaDAO();
+
+    // Actualiza estados antes de contar
+    membresiaDAO.actualizarMembresiasVencidas();
+
+    lblSocios.setText(
+            String.valueOf(
+                    dashboardDAO.contarSociosActivos()
+            )
+    );
+
+    lblMembresias.setText(
+            String.valueOf(
+                    dashboardDAO.contarMembresiasActivas()
+            )
+    );
+
+    lblIngresos.setText(
+            String.format(
+                    "S/ %.2f",
+                    dashboardDAO.totalPagosMes()
+            )
+    );
+
+    int porVencer =
+            membresiaDAO.contarMembresiasPorVencer(3);
+
+    lblPorVencer.setText(
+            String.valueOf(
+                    porVencer
+            )
+    );
+
+    repaint();
+    revalidate();
+
+}
 
     /**
      * Botón para el bloque de "Acciones rápidas": superficie clara, sin
