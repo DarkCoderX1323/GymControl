@@ -73,24 +73,36 @@ public class PagoDAO {
         List<Pago> listaPagos =
                 new ArrayList<>();
 
+        // OJO: la consulta anterior traía "tm.id AS membresia_id" (el id
+        // del TIPO de membresía, 1/2/3) en vez del id real de la
+        // membresía (p.membresia_id) -- eso hacía que la tabla de Pagos y
+        // el reporte Excel mostraran/guardaran un membresia_id
+        // incorrecto. Corregido acá.
+        //
+        // También se cambió el JOIN con membresia de INNER a LEFT: un
+        // pago puede quedar con membresia_id = NULL (por ejemplo, al
+        // eliminar una membresía desde MembresiaView, que desvincula en
+        // vez de borrar el pago) y con INNER JOIN esos pagos
+        // desaparecían por completo de la lista en vez de simplemente no
+        // tener tipo de membresía asociado.
         String sql =
                 "SELECT\n" +
                         "    p.id,\n" +
-                        "    s.id AS socio_id,\n" +
-                        "    s.nombre AS socio,\n" +
+                        "    p.socio_id,\n" +
+                        "    s.nombre AS socio_nombre,\n" +
+                        "    s.dni AS socio_dni,\n" +
                         "    p.monto,\n" +
                         "    p.metodo_pago,\n" +
                         "    p.fecha_pago,\n" +
                         "    p.descripcion,\n" +
-                        "    tm.id AS membresia_id,\n" +
-                        "    tm.nombre AS membresia\n" +
+                        "    p.membresia_id,\n" +
+                        "    m.tipo AS membresia_tipo\n" +
                         "FROM pago p\n" +
                         "INNER JOIN socio s\n" +
                         "    ON p.socio_id = s.id\n" +
-                        "INNER JOIN membresia m\n" +
+                        "LEFT JOIN membresia m\n" +
                         "    ON p.membresia_id = m.id\n" +
-                        "INNER JOIN tipo_membresia tm\n" +
-                        "    ON m.tipo_membresia_id = tm.id;";
+                        "ORDER BY p.fecha_pago DESC";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -136,6 +148,18 @@ public class PagoDAO {
                         rs.getInt("membresia_id")
                 );
 
+                pago.setNombreSocio(
+                        rs.getString("socio_nombre")
+                );
+
+                pago.setDniSocio(
+                        rs.getString("socio_dni")
+                );
+
+                pago.setTipoMembresia(
+                        rs.getString("membresia_tipo")
+                );
+
                 listaPagos.add(pago);
 
             }
@@ -158,9 +182,15 @@ public class PagoDAO {
     // =========================
 
     /**
-     * Filtra pagos combinando socio, método de pago, tipo de membresía y
-     * rango de fechas. Cualquier parámetro puede venir null para omitir
-     * ese criterio.
+     * Filtra pagos combinando socio (por id exacto), método de pago, tipo
+     * de membresía y rango de fechas. Cualquier parámetro puede venir
+     * null para omitir ese criterio.
+     *
+     * Firma original, sin tocar el primer parámetro (Integer socioId):
+     * por el mismo motivo que en MembresiaDAO, la búsqueda por
+     * nombre/DNI vive aparte en filtrarPagosPorNombre, para no arriesgar
+     * una ambigüedad de overload con los null literales que puedan venir
+     * de otros llamadores o tests.
      */
     public List<Pago> filtrarPagos(
             Integer socioId,
@@ -175,21 +205,20 @@ public class PagoDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT\n" +
                         "    p.id,\n" +
-                        "    s.id AS socio_id,\n" +
-                        "    s.nombre AS socio,\n" +
+                        "    p.socio_id,\n" +
+                        "    s.nombre AS socio_nombre,\n" +
+                        "    s.dni AS socio_dni,\n" +
                         "    p.monto,\n" +
                         "    p.metodo_pago,\n" +
                         "    p.fecha_pago,\n" +
                         "    p.descripcion,\n" +
-                        "    tm.id AS membresia_id,\n" +
-                        "    tm.nombre AS membresia\n" +
+                        "    p.membresia_id,\n" +
+                        "    m.tipo AS membresia_tipo\n" +
                         "FROM pago p\n" +
                         "INNER JOIN socio s\n" +
                         "    ON p.socio_id = s.id\n" +
-                        "INNER JOIN membresia m\n" +
+                        "LEFT JOIN membresia m\n" +
                         "    ON p.membresia_id = m.id\n" +
-                        "INNER JOIN tipo_membresia tm\n" +
-                        "    ON m.tipo_membresia_id = tm.id\n" +
                         "WHERE 1=1\n"
         );
 
@@ -250,6 +279,9 @@ public class PagoDAO {
 
                     pago.setDescripcion(rs.getString("descripcion"));
                     pago.setMembresiaId(rs.getInt("membresia_id"));
+                    pago.setNombreSocio(rs.getString("socio_nombre"));
+                    pago.setDniSocio(rs.getString("socio_dni"));
+                    pago.setTipoMembresia(rs.getString("membresia_tipo"));
 
                     listaPagos.add(pago);
                 }
@@ -259,6 +291,120 @@ public class PagoDAO {
 
             logger.error(
                     "Error al filtrar pagos.",
+                    e
+            );
+        }
+
+        return listaPagos;
+    }
+
+    /**
+     * Filtra pagos combinando nombre/DNI del socio (coincidencia
+     * parcial), método de pago, tipo de membresía y rango de fechas.
+     * Usada por la barra de filtros y el buscador rápido de PagoView
+     * (búsqueda por nombre, en vez de por ID de socio).
+     */
+    public List<Pago> filtrarPagosPorNombre(
+            String nombreODni,
+            String metodoPago,
+            String tipoMembresia,
+            LocalDate desde,
+            LocalDate hasta
+    ) {
+
+        List<Pago> listaPagos = new ArrayList<>();
+
+        StringBuilder sql = new StringBuilder(
+                "SELECT\n" +
+                        "    p.id,\n" +
+                        "    p.socio_id,\n" +
+                        "    s.nombre AS socio_nombre,\n" +
+                        "    s.dni AS socio_dni,\n" +
+                        "    p.monto,\n" +
+                        "    p.metodo_pago,\n" +
+                        "    p.fecha_pago,\n" +
+                        "    p.descripcion,\n" +
+                        "    p.membresia_id,\n" +
+                        "    m.tipo AS membresia_tipo\n" +
+                        "FROM pago p\n" +
+                        "INNER JOIN socio s\n" +
+                        "    ON p.socio_id = s.id\n" +
+                        "LEFT JOIN membresia m\n" +
+                        "    ON p.membresia_id = m.id\n" +
+                        "WHERE 1=1\n"
+        );
+
+        List<Object> parametros = new ArrayList<>();
+
+        if (nombreODni != null && !nombreODni.isBlank()) {
+            sql.append("  AND (s.nombre LIKE ? OR s.dni LIKE ?)\n");
+            String comodin = "%" + nombreODni.trim() + "%";
+            parametros.add(comodin);
+            parametros.add(comodin);
+        }
+
+        if (metodoPago != null && !metodoPago.isBlank()
+                && !metodoPago.equalsIgnoreCase("todos")) {
+            sql.append("  AND p.metodo_pago = ?\n");
+            parametros.add(metodoPago.trim().toLowerCase());
+        }
+
+        if (tipoMembresia != null && !tipoMembresia.isBlank()
+                && !tipoMembresia.equalsIgnoreCase("todos")) {
+            sql.append("  AND m.tipo = ?\n");
+            parametros.add(tipoMembresia.trim());
+        }
+
+        if (desde != null) {
+            sql.append("  AND DATE(p.fecha_pago) >= ?\n");
+            parametros.add(Date.valueOf(desde));
+        }
+
+        if (hasta != null) {
+            sql.append("  AND DATE(p.fecha_pago) <= ?\n");
+            parametros.add(Date.valueOf(hasta));
+        }
+
+        sql.append("ORDER BY p.fecha_pago DESC");
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < parametros.size(); i++) {
+                stmt.setObject(i + 1, parametros.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Pago pago = new Pago();
+
+                    pago.setId(rs.getInt("id"));
+                    pago.setSocioId(rs.getInt("socio_id"));
+                    pago.setMonto(rs.getDouble("monto"));
+                    pago.setMetodoPago(rs.getString("metodo_pago"));
+
+                    Timestamp fecha = rs.getTimestamp("fecha_pago");
+
+                    if (fecha != null) {
+                        pago.setFechaPago(fecha.toLocalDateTime());
+                    }
+
+                    pago.setDescripcion(rs.getString("descripcion"));
+                    pago.setMembresiaId(rs.getInt("membresia_id"));
+                    pago.setNombreSocio(rs.getString("socio_nombre"));
+                    pago.setDniSocio(rs.getString("socio_dni"));
+                    pago.setTipoMembresia(rs.getString("membresia_tipo"));
+
+                    listaPagos.add(pago);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            logger.error(
+                    "Error al filtrar pagos por nombre.",
                     e
             );
         }
