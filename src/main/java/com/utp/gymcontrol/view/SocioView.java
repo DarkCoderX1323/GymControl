@@ -1,5 +1,7 @@
 package com.utp.gymcontrol.view;
 
+import com.utp.gymcontrol.utils.DashboardManager;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -722,6 +724,8 @@ public class SocioView extends JFrame {
             );
 
             cargarSocios();
+            
+            DashboardManager.actualizar();
 
             limpiarCampos();
 
@@ -789,6 +793,8 @@ public class SocioView extends JFrame {
             );
 
             cargarSocios();
+            
+            DashboardManager.actualizar();
 
             limpiarCampos();
 
@@ -844,6 +850,8 @@ public class SocioView extends JFrame {
                     this,
                     "Socio eliminado correctamente."
             );
+            
+            DashboardManager.actualizar();
 
             cargarSocios();
 

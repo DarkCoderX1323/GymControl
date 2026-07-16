@@ -1,6 +1,7 @@
 package com.utp.gymcontrol.view;
 
 import com.utp.gymcontrol.dao.RegistroRapidoDAO;
+import com.utp.gymcontrol.utils.DashboardManager;
 import com.utp.gymcontrol.dao.SocioDAO;
 import com.utp.gymcontrol.dao.TipoMembresiaDAO;
 import com.utp.gymcontrol.model.Socio;
@@ -598,7 +599,7 @@ public class RegistroRapidoView extends JFrame {
                             + "Membresía ID: " + resultado.membresiaId + "\n"
                             + "Pago ID: " + resultado.pagoId
             );
-
+            DashboardManager.actualizar();
             limpiarFormulario();
             cargarSociosExistentes();
 
