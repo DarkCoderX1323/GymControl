@@ -57,6 +57,13 @@ public class MembresiaView extends JFrame {
     // no-null = el formulario está editando la membresía con ese id.
     private Integer idEnEdicion;
 
+    // true si la membresía cargada en el formulario estaba vencida al
+    // seleccionarla (o sea, esto es una renovación real con cobro nuevo),
+    // false si era una edición de una membresía todavía activa. Se usa
+    // para decidir si el pago vinculado también debe actualizar su
+    // fecha_pago a hoy (y así reflejarse en "Ingresos del mes").
+    private boolean idEnEdicionEraVencida;
+
     private JLabel lblModoFormulario;
 
     private MembresiaDAO membresiaDAO;
@@ -139,8 +146,19 @@ public class MembresiaView extends JFrame {
         txtInicio = new JTextField();
         txtFin = new JTextField();
 
-        txtInicio.setEditable(false);
+        // Editable: por defecto se autocompleta (hoy para renovar una
+        // vencida, la fecha original para editar una activa), pero el
+        // staff puede ajustarla a mano si hace falta -- por ejemplo, para
+        // dejar constancia de que el socio pagó unos días antes o después
+        // de la fecha "ideal".
         txtFin.setEditable(false);
+
+        txtInicio.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                calcularFechaFin();
+            }
+        });
 
         estilizarCampo(txtInicio);
         estilizarCampo(txtFin);
@@ -542,21 +560,53 @@ public class MembresiaView extends JFrame {
         lblSocioValor.setText(nombreMostrado);
 
         cbTipos.setEnabled(true);
+
+        // Ojo: seleccionarTipoPorId dispara el actionListener del combo
+        // (calcularFechaFin), pero idEnEdicion todavía es null en este
+        // punto, así que ese guard evita que se recalcule nada todavía
+        // con datos a medio cargar.
         seleccionarTipoPorId(m.getTipoMembresiaId());
 
-        txtInicio.setText(
-                m.getFechaInicio().toString()
-        );
-
-        txtFin.setText(
-                m.getFechaFin().toString()
-        );
+        boolean esVencida =
+                "vencida".equalsIgnoreCase(m.getEstado());
 
         idEnEdicion = m.getId();
+        idEnEdicionEraVencida = esVencida;
+
+        if (esVencida) {
+
+            // BUG CORREGIDO: antes se dejaba la fecha de inicio de la
+            // membresía vencida (por ejemplo, la de hace 3 meses) como
+            // base para calcular la nueva fecha fin al cambiar el tipo.
+            // Eso podía dar una fecha fin que seguía en el pasado (según
+            // cuánto tiempo llevaba vencida y qué tan corto era el nuevo
+            // tipo), y entonces el "Actualizar" guardaba bien el tipo
+            // nuevo pero el estado se quedaba en "vencida" -- parecía que
+            // no había pasado nada. Una membresía vencida se renueva
+            // desde HOY, no desde el inicio del período que ya terminó.
+            txtInicio.setText(
+                    LocalDate.now().toString()
+            );
+
+            calcularFechaFin();
+
+        } else {
+
+            txtInicio.setText(
+                    m.getFechaInicio().toString()
+            );
+
+            txtFin.setText(
+                    m.getFechaFin().toString()
+            );
+        }
 
         lblModoFormulario.setForeground(Tema.ACENTO);
         lblModoFormulario.setText(
-                "Editando membresía de " + nombreMostrado
+                esVencida
+                        ? "Renovando membresía vencida de " + nombreMostrado
+                        + " (ID " + m.getId() + ") — inicio ajustado a hoy"
+                        : "Editando membresía de " + nombreMostrado
                         + " (ID " + m.getId() + ")"
         );
 
@@ -571,6 +621,7 @@ public class MembresiaView extends JFrame {
     private void limpiarFormulario() {
 
         idEnEdicion = null;
+        idEnEdicionEraVencida = false;
 
         lblSocioValor.setText("—");
 
@@ -682,13 +733,17 @@ public class MembresiaView extends JFrame {
             }
 
             // Sincroniza el monto del pago asociado con el precio del
-            // tipo vigente. No es crítico para la membresía en sí, así
-            // que si falla se avisa aparte pero no se revierte la
-            // actualización ya confirmada.
+            // tipo vigente. Si esto es una renovación real (la membresía
+            // estaba vencida), también actualiza fecha_pago a hoy -- si
+            // no, el pago sigue fechado en el mes viejo y "Ingresos del
+            // mes" del Dashboard nunca refleja el nuevo monto. No es
+            // crítico para la membresía en sí, así que si falla se avisa
+            // aparte pero no se revierte la actualización ya confirmada.
             boolean montoSincronizado =
                     pagoDAO.actualizarMontoPorMembresia(
                             idEnEdicion,
-                            tipo.getPrecio()
+                            tipo.getPrecio(),
+                            idEnEdicionEraVencida
                     );
 
             cargarMembresias();

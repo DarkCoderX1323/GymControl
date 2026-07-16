@@ -11,8 +11,8 @@ public class DashboardDAO {
 
         String sql =
                 "SELECT COUNT(*) total " +
-                "FROM socio " +
-                "WHERE estado='activo'";
+                        "FROM socio " +
+                        "WHERE estado='activo'";
 
         try(Connection conn = ConexionDB.conectar();
             PreparedStatement stmt =
@@ -35,8 +35,8 @@ public class DashboardDAO {
 
         String sql =
                 "SELECT COUNT(*) total " +
-                "FROM membresia " +
-                "WHERE estado='activa'";
+                        "FROM membresia " +
+                        "WHERE estado='activa'";
 
         try(Connection conn = ConexionDB.conectar();
             PreparedStatement stmt =
@@ -57,10 +57,13 @@ public class DashboardDAO {
 
     public double totalPagosMes() {
 
+        // Compara el mes y año de la fecha de pago con el mes y año actual
+
         String sql =
                 "SELECT IFNULL(SUM(monto),0) total " +
-                "FROM pago " +
-                "WHERE MONTH(fecha_pago)=MONTH(CURDATE())";
+                        "FROM pago " +
+                        "WHERE MONTH(fecha_pago)=MONTH(CURDATE()) " +
+                        "AND YEAR(fecha_pago)=YEAR(CURDATE())";
 
         try(Connection conn = ConexionDB.conectar();
             PreparedStatement stmt =
