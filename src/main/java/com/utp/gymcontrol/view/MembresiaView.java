@@ -32,6 +32,7 @@ public class MembresiaView extends JFrame {
 
     private JTextField txtInicio;
     private JTextField txtFin;
+    private JComboBox<String> cbMetodoPago;
 
     private JButton btnActualizar;
     private JButton btnEliminar;
@@ -163,6 +164,12 @@ public class MembresiaView extends JFrame {
         estilizarCampo(txtInicio);
         estilizarCampo(txtFin);
 
+        cbMetodoPago = new JComboBox<>(
+                new String[]{"efectivo", "tarjeta", "yape", "plin"}
+        );
+        estilizarCombo(cbMetodoPago);
+        cbMetodoPago.setEnabled(false);
+
         btnActualizar =
                 new JButton("Actualizar membresía");
 
@@ -210,6 +217,9 @@ public class MembresiaView extends JFrame {
         gbc.gridy = 4;
         formulario.add(crearEtiqueta("Fecha fin"), gbc);
 
+        gbc.gridy = 5;
+        formulario.add(crearEtiqueta("Método de pago"), gbc);
+
         gbc.gridx = 1;
         gbc.weightx = 1;
 
@@ -224,6 +234,9 @@ public class MembresiaView extends JFrame {
 
         gbc.gridy = 4;
         formulario.add(txtFin, gbc);
+
+        gbc.gridy = 5;
+        formulario.add(cbMetodoPago, gbc);
 
         // Botones: compactos y centrados, en un sub-panel aparte para que
         // no hereden el ancho de las columnas del formulario
@@ -240,7 +253,7 @@ public class MembresiaView extends JFrame {
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.weightx = 0;
         gbc.insets = new Insets(16, 6, 6, 6);
@@ -561,6 +574,17 @@ public class MembresiaView extends JFrame {
 
         cbTipos.setEnabled(true);
 
+        cbMetodoPago.setEnabled(true);
+
+        String metodoActual =
+                pagoDAO.obtenerMetodoPagoPorMembresia(m.getId());
+
+        cbMetodoPago.setSelectedItem(
+                metodoActual != null
+                        ? metodoActual.toLowerCase()
+                        : "efectivo"
+        );
+
         // Ojo: seleccionarTipoPorId dispara el actionListener del combo
         // (calcularFechaFin), pero idEnEdicion todavía es null en este
         // punto, así que ese guard evita que se recalcule nada todavía
@@ -627,6 +651,9 @@ public class MembresiaView extends JFrame {
 
         cbTipos.setEnabled(false);
         cbTipos.setSelectedIndex(-1);
+
+        cbMetodoPago.setEnabled(false);
+        cbMetodoPago.setSelectedIndex(0);
 
         txtInicio.setText("");
         txtFin.setText("");
@@ -732,18 +759,23 @@ public class MembresiaView extends JFrame {
                 return;
             }
 
-            // Sincroniza el monto del pago asociado con el precio del
-            // tipo vigente. Si esto es una renovación real (la membresía
-            // estaba vencida), también actualiza fecha_pago a hoy -- si
-            // no, el pago sigue fechado en el mes viejo y "Ingresos del
-            // mes" del Dashboard nunca refleja el nuevo monto. No es
-            // crítico para la membresía en sí, así que si falla se avisa
-            // aparte pero no se revierte la actualización ya confirmada.
+            // Sincroniza el monto (y el método de pago elegido) del pago
+            // asociado con el tipo vigente. Si esto es una renovación
+            // real (la membresía estaba vencida), también actualiza
+            // fecha_pago a hoy -- si no, el pago sigue fechado en el mes
+            // viejo y "Ingresos del mes" del Dashboard nunca refleja el
+            // nuevo monto. No es crítico para la membresía en sí, así que
+            // si falla se avisa aparte pero no se revierte la
+            // actualización ya confirmada.
+            String metodoPago =
+                    (String) cbMetodoPago.getSelectedItem();
+
             boolean montoSincronizado =
                     pagoDAO.actualizarMontoPorMembresia(
                             idEnEdicion,
                             tipo.getPrecio(),
-                            idEnEdicionEraVencida
+                            idEnEdicionEraVencida,
+                            metodoPago
                     );
 
             cargarMembresias();

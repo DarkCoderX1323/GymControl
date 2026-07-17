@@ -623,29 +623,37 @@ public class PagoDAO {
      *                     false (solo se corrigió el tipo de una
      *                     membresía activa, sin que eso implique un cobro
      *                     nuevo), la fecha del pago no se toca.
+     * @param metodoPago   método de pago elegido en el formulario de
+     *                     edición (efectivo/tarjeta/yape/plin). Se
+     *                     actualiza siempre, sin importar si es
+     *                     renovación o no: el staff puede estar
+     *                     corrigiendo el método aunque no sea una
+     *                     renovación completa.
      */
     public boolean actualizarMontoPorMembresia(
             int membresiaId,
             double nuevoMonto,
-            boolean esRenovacion
+            boolean esRenovacion,
+            String metodoPago
     ) {
 
         String sql =
                 esRenovacion
-                        ? "UPDATE pago SET monto=?, fecha_pago=NOW() WHERE membresia_id=?"
-                        : "UPDATE pago SET monto=? WHERE membresia_id=?";
+                        ? "UPDATE pago SET monto=?, metodo_pago=?, fecha_pago=NOW() WHERE membresia_id=?"
+                        : "UPDATE pago SET monto=?, metodo_pago=? WHERE membresia_id=?";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setDouble(1, nuevoMonto);
-            stmt.setInt(2, membresiaId);
+            stmt.setString(2, metodoPago);
+            stmt.setInt(3, membresiaId);
 
             int filas = stmt.executeUpdate();
 
             logger.info(
-                    "Monto sincronizado para membresia_id {} -> {} ({} pago(s)), fecha_pago actualizada: {}",
-                    membresiaId, nuevoMonto, filas, esRenovacion
+                    "Monto/metodo sincronizados para membresia_id {} -> {} / {} ({} pago(s)), fecha_pago actualizada: {}",
+                    membresiaId, nuevoMonto, metodoPago, filas, esRenovacion
             );
 
             return true;
@@ -660,6 +668,42 @@ public class PagoDAO {
             return false;
 
         }
+    }
+
+    /**
+     * Devuelve el método de pago del pago vinculado a una membresía (el
+     * más reciente, si hubiera más de uno), para precargarlo en el
+     * formulario de edición de MembresiaView. Devuelve null si no hay
+     * ningún pago vinculado.
+     */
+    public String obtenerMetodoPagoPorMembresia(int membresiaId) {
+
+        String sql =
+                "SELECT metodo_pago FROM pago " +
+                        "WHERE membresia_id=? " +
+                        "ORDER BY fecha_pago DESC LIMIT 1";
+
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, membresiaId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+                    return rs.getString("metodo_pago");
+                }
+            }
+
+        } catch (SQLException e) {
+
+            logger.error(
+                    "Error al obtener método de pago de la membresía.",
+                    e
+            );
+        }
+
+        return null;
     }
 
 }

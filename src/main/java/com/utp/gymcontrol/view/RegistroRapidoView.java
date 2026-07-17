@@ -16,10 +16,15 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Registro rápido: crea un socio (nuevo o existente), su membresía y el
- * pago correspondiente en una sola pantalla, en vez de tener que pasar
- * por SocioView, MembresiaView y PagoView por separado copiando IDs a
- * mano.
+ * Registro rápido: crea un socio nuevo, su membresía y el pago
+ * correspondiente en una sola pantalla, en vez de tener que pasar por
+ * SocioView, MembresiaView y PagoView por separado copiando IDs a mano.
+ *
+ * La opción de "socio existente" se sacó de acá: insertaba una membresía
+ * y un pago nuevos para un socio que ya tenía una, en vez de renovarla,
+ * dejando dos membresías para el mismo socio. Para renovar o cambiar de
+ * plan a un socio existente, usar MembresiaView (seleccionar la fila →
+ * cambiar tipo → Actualizar membresía).
  */
 public class RegistroRapidoView extends JFrame {
 
@@ -33,18 +38,10 @@ public class RegistroRapidoView extends JFrame {
     // SOCIO
     // =========================
 
-    private JRadioButton rbSocioNuevo;
-    private JRadioButton rbSocioExistente;
-
-    private JPanel panelSocio;
-    private CardLayout cardLayoutSocio;
-
     private JTextField txtNombre;
     private JTextField txtDni;
     private JTextField txtTelefono;
     private JTextField txtEmail;
-
-    private JComboBox<Socio> cbSocioExistente;
 
     // =========================
     // MEMBRESIA
@@ -112,7 +109,7 @@ public class RegistroRapidoView extends JFrame {
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel subtitulo = new JLabel(
-                "Socio + membresía + pago, todo en un solo paso",
+                "Alta de socio nuevo: socio + membresía + pago, todo en un solo paso",
                 SwingConstants.CENTER
         );
 
@@ -181,7 +178,6 @@ public class RegistroRapidoView extends JFrame {
         add(scroll, BorderLayout.CENTER);
 
         cargarTiposMembresia();
-        cargarSociosExistentes();
     }
 
     // =========================
@@ -200,44 +196,19 @@ public class RegistroRapidoView extends JFrame {
 
         JLabel titulo = crearTituloSeccion("1. Socio");
 
-        rbSocioNuevo = new JRadioButton("Socio nuevo", true);
-        rbSocioExistente = new JRadioButton("Socio existente");
-
-        estilizarRadio(rbSocioNuevo);
-        estilizarRadio(rbSocioExistente);
-
-        ButtonGroup grupo = new ButtonGroup();
-        grupo.add(rbSocioNuevo);
-        grupo.add(rbSocioExistente);
-
-        JPanel panelRadios = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 15, 0)
-        );
-        panelRadios.setBackground(Tema.SUPERFICIE);
-        panelRadios.add(rbSocioNuevo);
-        panelRadios.add(rbSocioExistente);
-
-        cardLayoutSocio = new CardLayout();
-        panelSocio = new JPanel(cardLayoutSocio);
-        panelSocio.setBackground(Tema.SUPERFICIE);
-        panelSocio.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        panelSocio.add(crearPanelSocioNuevo(), "nuevo");
-        panelSocio.add(crearPanelSocioExistente(), "existente");
-
-        rbSocioNuevo.addActionListener(
-                e -> cardLayoutSocio.show(panelSocio, "nuevo")
-        );
-
-        rbSocioExistente.addActionListener(
-                e -> cardLayoutSocio.show(panelSocio, "existente")
-        );
+        // Se sacó la opción "Socio existente": estaba insertando una
+        // membresía y un pago nuevos para un socio que ya tenía una
+        // membresía, en vez de renovarla -- terminaba con dos membresías
+        // para el mismo socio. Ese caso (renovar o cambiar de plan a un
+        // socio existente) ya lo cubre MembresiaView (seleccionar la fila
+        // → cambiar tipo → Actualizar membresía), que sí actualiza en vez
+        // de duplicar. Este formulario queda solo para el alta de un
+        // socio nuevo.
+        JPanel panelSocioNuevo = crearPanelSocioNuevo();
 
         seccion.add(titulo);
         seccion.add(Box.createVerticalStrut(10));
-        seccion.add(panelRadios);
-        seccion.add(Box.createVerticalStrut(10));
-        seccion.add(panelSocio);
+        seccion.add(panelSocioNuevo);
 
         return seccion;
     }
@@ -252,31 +223,6 @@ public class RegistroRapidoView extends JFrame {
         txtDni = crearCampoConEtiqueta(panel, "DNI");
         txtTelefono = crearCampoConEtiqueta(panel, "Teléfono");
         txtEmail = crearCampoConEtiqueta(panel, "Email");
-
-        return panel;
-    }
-
-    private JPanel crearPanelSocioExistente() {
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Tema.SUPERFICIE);
-
-        JLabel label = new JLabel("Seleccionar socio");
-        label.setForeground(Tema.TEXTO_SECUNDARIO);
-        label.setFont(Tema.fuenteEtiqueta());
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        cbSocioExistente = new JComboBox<>();
-        cbSocioExistente.setMaximumSize(
-                new Dimension(ANCHO_CAMPO, 40)
-        );
-        cbSocioExistente.setAlignmentX(Component.CENTER_ALIGNMENT);
-        estilizarCombo(cbSocioExistente);
-
-        panel.add(label);
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(cbSocioExistente);
 
         return panel;
     }
@@ -444,15 +390,6 @@ public class RegistroRapidoView extends JFrame {
         combo.setFont(Tema.fuenteRegular().deriveFont(13f));
     }
 
-    private void estilizarRadio(JRadioButton radio) {
-
-        radio.setBackground(Tema.SUPERFICIE);
-        radio.setForeground(Tema.TEXTO_PRIMARIO);
-        radio.setFont(Tema.fuenteRegular().deriveFont(13f));
-        radio.setFocusPainted(false);
-        radio.setCursor(new Cursor(Cursor.HAND_CURSOR));
-    }
-
     private JButton crearBoton(String texto, Color color) {
 
         JButton boton = new JButton(texto);
@@ -484,17 +421,6 @@ public class RegistroRapidoView extends JFrame {
         }
 
         actualizarResumen();
-    }
-
-    private void cargarSociosExistentes() {
-
-        cbSocioExistente.removeAllItems();
-
-        List<Socio> socios = socioDAO.obtenerSocios();
-
-        for (Socio socio : socios) {
-            cbSocioExistente.addItem(socio);
-        }
     }
 
     private void actualizarResumen() {
@@ -541,55 +467,32 @@ public class RegistroRapidoView extends JFrame {
 
         String metodoPago = (String) cbMetodoPago.getSelectedItem();
 
-        Socio socioNuevo = null;
-        Integer socioIdExistente = null;
+        String nombre = txtNombre.getText().trim();
+        String dni = txtDni.getText().trim();
+        String telefono = txtTelefono.getText().trim();
+        String email = txtEmail.getText().trim();
 
-        if (rbSocioExistente.isSelected()) {
+        if (StringUtils.isBlank(nombre) || StringUtils.isBlank(dni)) {
 
-            Socio seleccionado =
-                    (Socio) cbSocioExistente.getSelectedItem();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Nombre y DNI son obligatorios para un socio nuevo."
+            );
 
-            if (seleccionado == null) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Seleccione un socio existente."
-                );
-
-                return;
-            }
-
-            socioIdExistente = seleccionado.getId();
-
-        } else {
-
-            String nombre = txtNombre.getText().trim();
-            String dni = txtDni.getText().trim();
-            String telefono = txtTelefono.getText().trim();
-            String email = txtEmail.getText().trim();
-
-            if (StringUtils.isBlank(nombre) || StringUtils.isBlank(dni)) {
-
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Nombre y DNI son obligatorios para un socio nuevo."
-                );
-
-                return;
-            }
-
-            socioNuevo = new Socio();
-            socioNuevo.setNombre(nombre);
-            socioNuevo.setDni(dni);
-            socioNuevo.setTelefono(telefono);
-            socioNuevo.setEmail(email);
+            return;
         }
+
+        Socio socioNuevo = new Socio();
+        socioNuevo.setNombre(nombre);
+        socioNuevo.setDni(dni);
+        socioNuevo.setTelefono(telefono);
+        socioNuevo.setEmail(email);
 
         try {
 
             RegistroRapidoDAO.Resultado resultado =
                     registroRapidoDAO.registrarTodo(
-                            socioNuevo, socioIdExistente, tipo, metodoPago
+                            socioNuevo, null, tipo, metodoPago
                     );
 
             JOptionPane.showMessageDialog(
@@ -601,7 +504,6 @@ public class RegistroRapidoView extends JFrame {
             );
             DashboardManager.actualizar();
             limpiarFormulario();
-            cargarSociosExistentes();
 
         } catch (SQLException e) {
 
@@ -617,9 +519,6 @@ public class RegistroRapidoView extends JFrame {
     }
 
     private void limpiarFormulario() {
-
-        rbSocioNuevo.setSelected(true);
-        cardLayoutSocio.show(panelSocio, "nuevo");
 
         txtNombre.setText("");
         txtDni.setText("");
