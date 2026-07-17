@@ -24,4 +24,4 @@ Sistema de gestión para gimnasios desarrollado en Java.
 
 ## Estado
 
-Fase de desarrollo académico.
+Proyecto Finalizado
